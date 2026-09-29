@@ -30,7 +30,7 @@ const Editor = dynamic(() => import("@monaco-editor/react"), {
     ssr: false,
     loading: () => (
         <div className="h-full w-full flex items-center justify-center" style={{ backgroundColor: "var(--workbench-editor, var(--editor-bg, #1a1c22))" }}>
-            <FaSpinner className="animate-spin text-teal-600 text-2xl" />
+            <FaSpinner className="animate-spin text-indigo-500 text-2xl" />
         </div>
     )
 });
@@ -100,7 +100,7 @@ export default function MonacoEditor({ language, code, setCode, onMount, theme, 
                     className: 'temporary-highlight',
                     glyphMarginClassName: 'speaking-glyph',
                     overviewRuler: {
-                        color: '#0f766e',
+                        color: '#6366f1',
                         position: monaco.editor.OverviewRulerLane.Center
                     },
                     marginClassName: 'speaking-margin',
@@ -362,8 +362,8 @@ export default function MonacoEditor({ language, code, setCode, onMount, theme, 
 
     const RunningOverlay = () => (
         <div className="absolute inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-10 rounded-lg">
-            <div className="bg-(--workbench-editor) p-4 rounded-xl border border-teal-600/30 shadow-2xl flex items-center gap-3">
-                <FaSpinner className="animate-spin text-teal-600 text-xl" />
+            <div className="bg-(--workbench-editor) p-4 rounded-xl border border-indigo-500/30 shadow-2xl flex items-center gap-3">
+                <FaSpinner className="animate-spin text-indigo-500 text-xl" />
                 <span className="text-white">Executing code...</span>
             </div>
         </div>
@@ -376,7 +376,7 @@ export default function MonacoEditor({ language, code, setCode, onMount, theme, 
             {isEditorLoading && (
                 <div className="absolute inset-0 flex items-center justify-center" style={{ backgroundColor: "var(--workbench-editor, var(--editor-bg, #1a1c22))" }}>
                     <div className="text-center">
-                        <FaSpinner className="animate-spin text-teal-600 text-3xl mx-auto mb-3" />
+                        <FaSpinner className="animate-spin text-indigo-500 text-3xl mx-auto mb-3" />
                         <p className="text-gray-400 text-sm">Loading editor...</p>
                     </div>
                 </div>

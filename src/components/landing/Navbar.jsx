@@ -1,15 +1,22 @@
 "use client";
 
-import { useTheme } from "@/context/ThemeContext";
 import { useAuth } from "@/context/AuthContext";
+import { useTheme } from "@/context/ThemeContext";
 import { Moon, Sparkles, Sun } from "lucide-react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 
 export default function Navbar() {
     const { mode, toggleMode } = useTheme();
     const { user, logout, loading } = useAuth();
+    const pathname = usePathname();
     const router = useRouter();
+
+    const isDedicatedWorkspace =
+        pathname === "/problem-solver" ||
+        pathname === "/learning-mode" ||
+        pathname === "/practice" ||
+        (pathname.startsWith("/roadmap/") && pathname !== "/roadmap");
 
     const handleSignOut = async () => {
         try {
@@ -19,6 +26,8 @@ export default function Navbar() {
             console.error("Sign out failed:", error);
         }
     };
+
+    if (isDedicatedWorkspace) return null;
 
     return (
         <header className="fixed left-0 right-0 top-0 z-50 px-4 py-4">
@@ -51,28 +60,28 @@ export default function Navbar() {
                 {/* Desktop Navigation */}
                 <div className="hidden items-center gap-8 md:flex">
                     <Link
-                        href="#about"
+                        href="/about"
                         className="text-sm font-medium text-[var(--muted)] transition hover:text-indigo-500"
                     >
                         About
                     </Link>
 
                     <Link
-                        href="#features"
+                        href="/problem-solver"
                         className="text-sm font-medium text-[var(--muted)] transition hover:text-indigo-500"
                     >
                         Practice
                     </Link>
 
                     <Link
-                        href="#roadmap"
+                        href="/roadmap"
                         className="text-sm font-medium text-[var(--muted)] transition hover:text-indigo-500"
                     >
                         RoadMap
                     </Link>
 
                     <Link
-                        href="#pricing"
+                        href="/pricing"
                         className="text-sm font-medium text-[var(--muted)] transition hover:text-indigo-500"
                     >
                         Pricing

@@ -328,7 +328,7 @@ export default function RoadmapPage() {
     return (
       <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: isDark ? "#0B0B0F" : "#f5f5f5" }}>
         <div className="text-center">
-          <FaSpinner className="text-6xl text-[#FF5A1F] animate-spin mx-auto mb-4" />
+          <FaSpinner className="text-6xl text-indigo-500 animate-spin mx-auto mb-4" />
           <h2 className="text-2xl font-bold mb-2" style={{ color: isDark ? "#EDEDED" : "#1a1a1a" }}>
             {authLoading ? 'Loading...' : 'Loading your roadmaps...'}
           </h2>
@@ -346,7 +346,7 @@ export default function RoadmapPage() {
           {/* Header */}
           <div className="text-center mb-12">
             <h1 className="text-4xl md:text-5xl font-bold mb-4" style={{ color: isDark ? "#EDEDED" : "#1a1a1a" }}>
-              Your Learning <span className="text-[#FF5A1F]">Roadmaps</span>
+              Your Learning <span className="text-indigo-500">Roadmaps</span>
             </h1>
             <p className="text-gray-500 text-lg mb-4">
               {savedRoadmaps.length > 0
@@ -389,7 +389,7 @@ export default function RoadmapPage() {
                   className="group cursor-pointer p-6 rounded-2xl backdrop-blur-sm border-2 transition-all duration-300 hover:scale-105 hover:shadow-2xl"
                   style={{
                     backgroundColor: isDark ? "rgba(26, 28, 34, 0.8)" : "rgba(255, 255, 255, 0.9)",
-                    borderColor: progress === 100 ? "#10b981" : progress > 0 ? "#FF5A1F" : "#2a2e3a"
+                    borderColor: progress > 0 ? "#6366f1" : "#2a2e3a"
                   }}
                 >
                   {/* Technology Badge */}
@@ -404,7 +404,7 @@ export default function RoadmapPage() {
                       </div>
                     </div>
                     {progress === 100 && (
-                      <FaTrophy className="text-2xl text-yellow-500" />
+                      <FaTrophy className="text-2xl text-indigo-500" />
                     )}
                   </div>
 
@@ -412,11 +412,11 @@ export default function RoadmapPage() {
                   <div className="mb-4">
                     <div className="flex justify-between text-sm mb-1">
                       <span className="text-gray-500">Progress</span>
-                      <span className="font-bold text-[#FF5A1F]">{progress}%</span>
+                      <span className="font-bold text-indigo-500">{progress}%</span>
                     </div>
                     <div className="w-full h-2 bg-gray-700 rounded-full overflow-hidden">
                       <div
-                        className="h-full bg-gradient-to-r from-[#FF5A1F] to-[#d93d0b] transition-all duration-500"
+                        className="h-full bg-gradient-to-r from-indigo-600 to-indigo-800 transition-all duration-500"
                         style={{ width: `${progress}%` }}
                       />
                     </div>
@@ -425,19 +425,19 @@ export default function RoadmapPage() {
                   {/* Stats */}
                   <div className="grid grid-cols-3 gap-2 mb-4">
                     <div className="text-center">
-                      <div className="text-xl font-bold text-[#FF5A1F]">
+                      <div className="text-xl font-bold text-indigo-500">
                         {roadmapData.progress?.completedWeeks || 0}
                       </div>
                       <div className="text-xs text-gray-500">Completed</div>
                     </div>
                     <div className="text-center">
-                      <div className="text-xl font-bold text-[#FF5A1F]">
+                      <div className="text-xl font-bold text-indigo-500">
                         {roadmapData.progress?.currentWeek || 1}
                       </div>
                       <div className="text-xs text-gray-500">Current</div>
                     </div>
                     <div className="text-center">
-                      <div className="text-xl font-bold text-[#FF5A1F]">
+                      <div className="text-xl font-bold text-indigo-500">
                         {roadmapData.progress?.totalWeeks || 0}
                       </div>
                       <div className="text-xs text-gray-500">Total</div>
@@ -456,7 +456,7 @@ export default function RoadmapPage() {
 
                   {/* Continue Button */}
                   <button
-                    className="w-full py-2 rounded-lg font-medium text-sm bg-gradient-to-r from-[#FF5A1F] to-[#d93d0b] text-white transition-all group-hover:shadow-lg"
+                    className="w-full py-2 rounded-lg font-medium text-sm bg-gradient-to-r from-indigo-600 to-indigo-800 text-white transition-all group-hover:shadow-lg"
                   >
                     {progress === 100 ? '🎉 Review' : progress > 0 ? '▶ Continue' : '🚀 Start'}
                   </button>
@@ -467,7 +467,7 @@ export default function RoadmapPage() {
             {/* Create New Roadmap Card */}
             <div
               onClick={createNewRoadmap}
-              className="group cursor-pointer p-6 rounded-2xl backdrop-blur-sm border-2 border-dashed transition-all duration-300 hover:scale-105 hover:border-[#FF5A1F] flex flex-col items-center justify-center min-h-[300px]"
+              className="group cursor-pointer p-6 rounded-2xl backdrop-blur-sm border-2 border-dashed transition-all duration-300 hover:scale-105 hover:border-indigo-500 flex flex-col items-center justify-center min-h-[300px]"
               style={{
                 backgroundColor: isDark ? "rgba(26, 28, 34, 0.4)" : "rgba(255, 255, 255, 0.5)",
                 borderColor: "#2a2e3a"
@@ -495,16 +495,16 @@ export default function RoadmapPage() {
             {/* Close Button */}
             <button
               onClick={closeModal}
-              className="absolute top-4 right-4 w-10 h-10 rounded-full flex items-center justify-center text-gray-400 hover:text-[#FF5A1F] hover:bg-gray-700/50 transition-all z-10"
+              className="absolute top-4 right-4 w-10 h-10 rounded-full flex items-center justify-center text-gray-400 hover:text-indigo-500 hover:bg-gray-700/50 transition-all z-10"
             >
               ✕
             </button>
 
             {/* Modal Content */}
-            <div className="p-8">
+            <div className="p-8 pt-16">
               {isGenerating ? (
                 <div className="text-center py-12">
-                  <FaSpinner className="text-6xl text-[#FF5A1F] animate-spin mx-auto mb-4" />
+                  <FaSpinner className="text-6xl text-indigo-500 animate-spin mx-auto mb-4" />
                   <h2 className="text-2xl font-bold mb-2" style={{ color: isDark ? "#EDEDED" : "#1a1a1a" }}>
                     🤖 Generating Your Personalized Roadmap...
                   </h2>
@@ -516,11 +516,11 @@ export default function RoadmapPage() {
                   <div className="mb-8">
                     <div className="flex justify-between items-center mb-2">
                       <span className="text-sm text-gray-500">Question {currentQuestion + 1} of {questions.length}</span>
-                      <span className="text-sm font-medium text-[#FF5A1F]">{Math.round(((currentQuestion + 1) / questions.length) * 100)}%</span>
+                      <span className="text-sm font-medium text-indigo-500">{Math.round(((currentQuestion + 1) / questions.length) * 100)}%</span>
                     </div>
                     <div className="w-full h-2 bg-gray-700 rounded-full overflow-hidden">
                       <div
-                        className="h-full bg-gradient-to-r from-[#FF5A1F] to-[#d93d0b] transition-all duration-300"
+                        className="h-full bg-gradient-to-r from-indigo-600 to-indigo-800 transition-all duration-300"
                         style={{ width: `${((currentQuestion + 1) / questions.length) * 100}%` }}
                       />
                     </div>
@@ -529,7 +529,7 @@ export default function RoadmapPage() {
                   {/* Question */}
                   <div className="mb-8">
                     <div className="flex items-center gap-3 mb-4">
-                      <div className="text-3xl text-[#FF5A1F]">
+                      <div className="text-3xl text-indigo-500">
                         {questions[currentQuestion].icon}
                       </div>
                       <h2 className="text-2xl font-bold" style={{ color: isDark ? "#EDEDED" : "#1a1a1a" }}>
@@ -546,10 +546,10 @@ export default function RoadmapPage() {
                             key={option.value}
                             onClick={() => handleAnswer(option.value)}
                             className={`w-full p-4 rounded-xl text-left transition-all duration-200 border-2 ${isSelected
-                                ? 'border-[#FF5A1F] bg-[#FF5A1F]/10 scale-105'
-                                : 'border-gray-700 hover:border-[#FF5A1F]/50 hover:scale-102'
+                              ? 'border-indigo-500 bg-indigo-500/10 scale-105'
+                              : 'border-gray-700 hover:border-indigo-500/50 hover:scale-102'
                               }`}
-                            style={{ backgroundColor: isDark ? (isSelected ? "rgba(255, 90, 31, 0.1)" : "#0f1117") : (isSelected ? "rgba(255, 90, 31, 0.1)" : "#f9f9f9") }}
+                            style={{ backgroundColor: isDark ? (isSelected ? "rgba(99, 102, 241, 0.1)" : "#0f1117") : (isSelected ? "rgba(99, 102, 241, 0.1)" : "#f9f9f9") }}
                           >
                             <div className="flex items-center gap-3">
                               <span className="text-2xl">{option.emoji}</span>
@@ -562,7 +562,7 @@ export default function RoadmapPage() {
                                 )}
                               </div>
                               {isSelected && (
-                                <FaCheckCircle className="text-[#FF5A1F] text-xl" />
+                                <FaCheckCircle className="text-indigo-500 text-xl" />
                               )}
                             </div>
                           </button>
@@ -586,7 +586,7 @@ export default function RoadmapPage() {
                       <button
                         onClick={generateRoadmap}
                         disabled={isGenerating}
-                        className="ml-auto px-8 py-3 rounded-lg font-medium bg-gradient-to-r from-[#FF5A1F] to-[#d93d0b] text-white hover:shadow-lg transition-all disabled:opacity-50"
+                        className="ml-auto px-8 py-3 rounded-lg font-medium bg-gradient-to-r from-indigo-600 to-indigo-800 text-white hover:shadow-lg transition-all disabled:opacity-50"
                       >
                         Generate My Roadmap 🚀
                       </button>

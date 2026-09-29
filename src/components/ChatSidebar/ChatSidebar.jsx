@@ -87,7 +87,7 @@ export default function ChatSidebar({ isOpen, onClose }) {
           </p>
           <button
             onClick={() => router.push("/login")}
-            className="bg-linear-to-r from-teal-700 to-teal-900 text-white px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 hover:scale-105 transition-all"
+            className="bg-linear-to-r from-indigo-600 to-indigo-800 text-white px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 hover:scale-105 transition-all"
           >
             <FaSignInAlt />
             Sign In
@@ -115,7 +115,7 @@ export default function ChatSidebar({ isOpen, onClose }) {
         <button
           onClick={handleNewChat}
           disabled={isCreating}
-          className="w-full bg-linear-to-r from-teal-700 to-teal-900 text-white px-4 py-2 rounded-lg text-sm font-semibold flex items-center justify-center gap-2 hover:scale-105 transition-all disabled:opacity-50"
+          className="w-full bg-linear-to-r from-indigo-600 to-indigo-800 text-white px-4 py-2 rounded-lg text-sm font-semibold flex items-center justify-center gap-2 hover:scale-105 transition-all disabled:opacity-50"
         >
           {isCreating ? (
             <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -167,7 +167,7 @@ export default function ChatSidebar({ isOpen, onClose }) {
                       e.stopPropagation();
                       saveRename(chat.id);
                     }}
-                    className="text-green-500 hover:text-green-400"
+                    className="text-indigo-500 hover:text-indigo-400"
                   >
                     <FaCheck size={12} />
                   </button>

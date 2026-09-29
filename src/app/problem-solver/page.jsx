@@ -188,7 +188,7 @@ function Terminal({ lines, onSubmitInput, waitingForInput, promptText }) {
             <div
                 style={{
                     borderTop: "1px solid var(--workbench-border)",
-                    backgroundColor: "#115e59",
+                    backgroundColor: "#4338ca",
                     color: "#ffffff",
                     fontSize: "11px",
                     padding: "1px 10px",
@@ -1746,7 +1746,7 @@ window.addEventListener('unhandledrejection',function(ev){window.parent.postMess
                     <select
                         value={language}
                         onChange={(e) => handleLanguageChange(e.target.value)}
-                        className="h-9 px-3 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-teal-600 bg-transparent text-[var(--workbench-text)] border-[var(--workbench-border)]"
+                        className="h-9 px-3 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-transparent text-[var(--workbench-text)] border-[var(--workbench-border)]"
                     >
                         <option value="html">HTML</option>
                         <option value="css">CSS</option>
@@ -1760,7 +1760,7 @@ window.addEventListener('unhandledrejection',function(ev){window.parent.postMess
                     <button
                         onClick={handleRun}
                         disabled={isRunning || waitingForInput}
-                        className={`h-9 px-5 rounded-lg font-medium text-sm bg-gradient-to-r from-teal-700 to-teal-800 text-white flex items-center gap-2 transition-all duration-200 ${isRunning || waitingForInput
+                        className={`h-9 px-5 rounded-lg font-medium text-sm bg-gradient-to-r from-indigo-600 to-indigo-700 text-white flex items-center gap-2 transition-all duration-200 ${isRunning || waitingForInput
                             ? "opacity-60 cursor-not-allowed"
                             : "hover:scale-105 hover:shadow-lg"
                             }`}
@@ -1787,7 +1787,7 @@ window.addEventListener('unhandledrejection',function(ev){window.parent.postMess
                     <button
                         onClick={handleFixWithOpenRouter}
                         disabled={isAIFixing}
-                        className={`h-9 px-4 rounded-lg font-medium text-sm bg-gradient-to-br from-teal-700 to-teal-900 hover:bg-gradient-to-bl cursor-pointer text-white flex items-center gap-2 transition-all ${isAIFixing ? "opacity-50 cursor-not-allowed" : "hover:scale-105"
+                        className={`h-9 px-4 rounded-lg font-medium text-sm bg-gradient-to-br from-indigo-600 to-indigo-800 hover:bg-gradient-to-bl cursor-pointer text-white flex items-center gap-2 transition-all ${isAIFixing ? "opacity-50 cursor-not-allowed" : "hover:scale-105"
                             }`}
                         title="Fix code with AI"
                     >
@@ -2089,7 +2089,7 @@ window.addEventListener('unhandledrejection',function(ev){window.parent.postMess
                 {isRightPanelOpen && (
                     <>
                         <div
-                            className="workbench-ai-resize w-[3px] cursor-col-resize hover:bg-teal-500/60 transition-colors"
+                            className="workbench-ai-resize w-[3px] cursor-col-resize hover:bg-indigo-500/60 transition-colors"
                             style={{ backgroundColor: "var(--workbench-border)" }}
                             onMouseDown={(e) => { e.preventDefault(); setIsResizingRight(true); }}
                         />
@@ -2106,7 +2106,7 @@ window.addEventListener('unhandledrejection',function(ev){window.parent.postMess
                                 <div className="workbench-ai-avatar relative mb-6">
                                     <div className="workbench-ai-avatar-frame w-24 h-24 rounded-full bg-gradient-to-r from-[#FF5A1F] to-[#d93d0b] p-[2px]">
                                         <div className="w-full h-full rounded-full bg-[#1a1c22] flex items-center justify-center">
-                                            <FaRobot className="text-4xl text-teal-600" aria-label="AI coding mentor" />
+                                            <FaRobot className="text-4xl text-indigo-500" aria-label="AI coding mentor" />
                                         </div>
                                     </div>
                                     <div className="workbench-ai-wave absolute -bottom-8 left-1/2 -translate-x-1/2 w-48 flex items-center justify-center gap-[2px]">
@@ -2122,7 +2122,7 @@ window.addEventListener('unhandledrejection',function(ev){window.parent.postMess
                                 <div className="workbench-ai-details w-full text-center mt-8">
                                     <div className="flex items-center justify-center gap-2 mb-1">
                                         <h3 className="text-white font-semibold text-sm">AI Mentor</h3>
-                                        <span className={`w-2 h-2 rounded-full ${isAiSpeaking ? "bg-[#FF5A1F] animate-pulse" : "bg-green-400"}`} />
+                                        <span className={`w-2 h-2 rounded-full bg-indigo-500 ${isAiSpeaking ? "animate-pulse" : ""}`} />
 
                                         {/* Voice Selector Button - Moved here */}
                                         {availableVoices.length > 0 && (
@@ -2306,7 +2306,7 @@ window.addEventListener('unhandledrejection',function(ev){window.parent.postMess
                                                                         }}
                                                                         disabled={isSpeaking}
                                                                         className={`flex items-center gap-1 px-2 py-1 rounded text-[10px] transition-all ${isSpeaking
-                                                                            ? 'bg-green-500/20 text-green-500 cursor-not-allowed'
+                                                                            ? 'bg-indigo-500/20 text-indigo-500 cursor-not-allowed'
                                                                             : 'bg-[#2a2e3a] hover:bg-[#3a3e4a] text-gray-300 hover:text-white'
                                                                             }`}
                                                                         title="Listen to this message"
@@ -2323,7 +2323,7 @@ window.addEventListener('unhandledrejection',function(ev){window.parent.postMess
                                                                     <button
                                                                         onClick={() => applyFixedCode(msg.fixedCode)}
                                                                         disabled={isExplaining}
-                                                                        className="px-3 py-1.5 rounded-lg text-xs bg-green-600 hover:bg-green-700 text-white transition-colors flex items-center gap-1"
+                                                                        className="px-3 py-1.5 rounded-lg text-xs bg-indigo-600 hover:bg-indigo-700 text-white transition-colors flex items-center gap-1"
                                                                         title="Apply the fixed code to editor"
                                                                     >
                                                                         <FaCheck size={10} />
@@ -2348,7 +2348,7 @@ window.addEventListener('unhandledrejection',function(ev){window.parent.postMess
                                                                             setCopiedIndex(msg.id);
                                                                             setTimeout(() => setCopiedIndex(null), 2000);
                                                                         }}
-                                                                        className="px-3 py-1.5 rounded-lg text-xs bg-teal-700 hover:bg-teal-800 text-white transition-colors flex items-center gap-1"
+                                                                        className="px-3 py-1.5 rounded-lg text-xs bg-indigo-600 hover:bg-indigo-700 text-white transition-colors flex items-center gap-1"
                                                                     >
                                                                         {copiedIndex === msg.id ? <FaCheck size={10} /> : <FaCopy size={10} />}
                                                                         Copy
@@ -2394,7 +2394,7 @@ window.addEventListener('unhandledrejection',function(ev){window.parent.postMess
                                         onChange={(e) => setUserInput(e.target.value)}
                                         onKeyPress={(e) => e.key === "Enter" && handleSendMessage()}
                                         placeholder="Ask me anything about coding..."
-                                        className="min-w-0 flex-1 h-9 px-3 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-teal-600 bg-transparent text-[var(--workbench-text)] border border-[var(--workbench-border)]"
+                                        className="min-w-0 flex-1 h-9 px-3 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-transparent text-[var(--workbench-text)] border border-[var(--workbench-border)]"
                                     />
                                     <input
                                         type="file"
