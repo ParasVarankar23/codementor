@@ -5,13 +5,13 @@ import Navbar from "@/components/landing/Navbar";
 import { useTheme } from "@/context/ThemeContext";
 import { useRouter } from "next/navigation";
 import {
+  FaArrowRight,
+  FaCheckCircle,
   FaCode,
+  FaLightbulb,
   FaMicrophone,
   FaRobot,
   FaRocket,
-  FaCheckCircle,
-  FaArrowRight,
-  FaLightbulb,
 } from "react-icons/fa";
 
 export default function AboutPage() {
@@ -51,8 +51,8 @@ export default function AboutPage() {
           <div className="mx-auto max-w-3xl text-center">
             <div
               className={`mb-5 inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-medium ${isDark
-                  ? "border-indigo-500/20 bg-indigo-500/10 text-indigo-300"
-                  : "border-indigo-200 bg-indigo-50 text-indigo-600"
+                ? "border-indigo-500/20 bg-indigo-500/10 text-indigo-300"
+                : "border-indigo-200 bg-indigo-50 text-indigo-600"
                 }`}
             >
               <FaRobot className="text-indigo-500" />
@@ -90,8 +90,8 @@ export default function AboutPage() {
               <button
                 onClick={() => router.push("/pricing")}
                 className={`inline-flex w-full items-center justify-center rounded-xl border px-6 py-3 text-sm font-semibold transition sm:w-auto ${isDark
-                    ? "border-gray-700 bg-gray-900 text-gray-200 hover:border-indigo-500 hover:text-indigo-400"
-                    : "border-gray-200 bg-white text-gray-700 hover:border-indigo-300 hover:text-indigo-600"
+                  ? "border-gray-700 bg-gray-900 text-gray-200 hover:border-indigo-500 hover:text-indigo-400"
+                  : "border-gray-200 bg-white text-gray-700 hover:border-indigo-300 hover:text-indigo-600"
                   }`}
               >
                 View Pricing
@@ -113,8 +113,8 @@ export default function AboutPage() {
           <section className="mb-16">
             <div
               className={`rounded-2xl border p-6 sm:p-8 lg:p-10 ${isDark
-                  ? "border-gray-800 bg-[#111118]"
-                  : "border-gray-200 bg-white shadow-sm"
+                ? "border-gray-800 bg-[#111118]"
+                : "border-gray-200 bg-white shadow-sm"
                 }`}
             >
               <div className="flex flex-col gap-6 sm:flex-row sm:items-start">
@@ -219,8 +219,8 @@ export default function AboutPage() {
           <section className="mb-16">
             <div
               className={`rounded-2xl border p-6 sm:p-8 ${isDark
-                  ? "border-gray-800 bg-[#111118]"
-                  : "border-gray-200 bg-white shadow-sm"
+                ? "border-gray-800 bg-[#111118]"
+                : "border-gray-200 bg-white shadow-sm"
                 }`}
             >
               <div className="mb-8">
@@ -290,8 +290,8 @@ export default function AboutPage() {
 
               <div
                 className={`rounded-2xl border p-6 ${isDark
-                    ? "border-gray-800 bg-[#111118]"
-                    : "border-gray-200 bg-white shadow-sm"
+                  ? "border-gray-800 bg-[#111118]"
+                  : "border-gray-200 bg-white shadow-sm"
                   }`}
               >
                 <div className="space-y-4">
@@ -324,8 +324,8 @@ export default function AboutPage() {
           <section className="mb-16">
             <div
               className={`rounded-2xl border p-6 sm:p-8 ${isDark
-                  ? "border-gray-800 bg-[#111118]"
-                  : "border-gray-200 bg-white shadow-sm"
+                ? "border-gray-800 bg-[#111118]"
+                : "border-gray-200 bg-white shadow-sm"
                 }`}
             >
               <div className="mb-8 text-center">
@@ -354,8 +354,8 @@ export default function AboutPage() {
                   <div
                     key={name}
                     className={`rounded-xl border p-4 text-center transition ${isDark
-                        ? "border-gray-800 bg-[#0c0c12] hover:border-indigo-500/40"
-                        : "border-gray-200 bg-gray-50 hover:border-indigo-300"
+                      ? "border-gray-800 bg-[#0c0c12] hover:border-indigo-500/40"
+                      : "border-gray-200 bg-gray-50 hover:border-indigo-300"
                       }`}
                   >
                     <div className="mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-full bg-indigo-500/10 text-indigo-500">
@@ -380,8 +380,8 @@ export default function AboutPage() {
           <section className="text-center">
             <div
               className={`rounded-2xl border p-8 sm:p-10 ${isDark
-                  ? "border-indigo-500/20 bg-indigo-500/5"
-                  : "border-indigo-100 bg-indigo-50/70"
+                ? "border-indigo-500/20 bg-indigo-500/5"
+                : "border-indigo-100 bg-indigo-50/70"
                 }`}
             >
               <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-indigo-600">
@@ -439,8 +439,8 @@ function FeatureCard({
   return (
     <div
       className={`group rounded-2xl border p-6 transition-all duration-200 ${isDark
-          ? "border-gray-800 bg-[#111118] hover:border-indigo-500/40"
-          : "border-gray-200 bg-white shadow-sm hover:border-indigo-300 hover:shadow-md"
+        ? "border-gray-800 bg-[#111118] hover:border-indigo-500/40"
+        : "border-gray-200 bg-white shadow-sm hover:border-indigo-300 hover:shadow-md"
         }`}
     >
       <div
