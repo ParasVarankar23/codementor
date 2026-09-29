@@ -1,11 +1,11 @@
 "use client";
 
-import Link from "next/link";
 import {
     ArrowRight,
     Mic,
     Rocket,
 } from "lucide-react";
+import Link from "next/link";
 
 export default function CTASection() {
     return (
@@ -46,7 +46,7 @@ export default function CTASection() {
 
                     <div className="mt-10 flex flex-col justify-center gap-4 sm:flex-row">
                         <Link
-                            href="/editor"
+                            href="/problem-solver"
                             className="
                 flex items-center justify-center gap-2
                 rounded-xl bg-gradient-to-r
@@ -61,7 +61,7 @@ export default function CTASection() {
                         </Link>
 
                         <Link
-                            href="#features"
+                            href="/roadmap"
                             className="
                 flex items-center justify-center gap-2
                 rounded-xl border border-[var(--border)]

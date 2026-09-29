@@ -1,11 +1,24 @@
 "use client";
 
 import { useTheme } from "@/context/ThemeContext";
+import { useAuth } from "@/context/AuthContext";
 import { Moon, Sparkles, Sun } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 export default function Navbar() {
     const { mode, toggleMode } = useTheme();
+    const { user, logout, loading } = useAuth();
+    const router = useRouter();
+
+    const handleSignOut = async () => {
+        try {
+            await logout();
+            router.push("/");
+        } catch (error) {
+            console.error("Sign out failed:", error);
+        }
+    };
 
     return (
         <header className="fixed left-0 right-0 top-0 z-50 px-4 py-4">
@@ -68,6 +81,7 @@ export default function Navbar() {
 
                 {/* Right */}
                 <div className="flex items-center gap-3">
+                    {/* Theme Toggle */}
                     <button
                         onClick={toggleMode}
                         className="
@@ -85,18 +99,38 @@ export default function Navbar() {
                         )}
                     </button>
 
-                    <Link
-                        href="/signin"
-                        className="
-              rounded-xl bg-gradient-to-r
-              from-indigo-600 to-violet-600
-              px-5 py-2.5 text-sm font-semibold text-white
-              shadow-lg shadow-indigo-500/20
-              transition hover:scale-[1.02]
-            "
-                    >
-                        Sign In
-                    </Link>
+                    {/* Authentication */}
+                    {!loading && (
+                        <>
+                            {user ? (
+                                <button
+                                    onClick={handleSignOut}
+                                    className="
+                    rounded-xl bg-gradient-to-r
+                    from-indigo-600 to-violet-600
+                    px-5 py-2.5 text-sm font-semibold text-white
+                    shadow-lg shadow-indigo-500/20
+                    transition hover:scale-[1.02]
+                  "
+                                >
+                                    Sign Out
+                                </button>
+                            ) : (
+                                <Link
+                                    href="/login"
+                                    className="
+                    rounded-xl bg-gradient-to-r
+                    from-indigo-600 to-violet-600
+                    px-5 py-2.5 text-sm font-semibold text-white
+                    shadow-lg shadow-indigo-500/20
+                    transition hover:scale-[1.02]
+                  "
+                                >
+                                    Sign In
+                                </Link>
+                            )}
+                        </>
+                    )}
                 </div>
             </nav>
         </header>

@@ -28,7 +28,7 @@ export default function HeroSection() {
                     className="
             absolute right-0 top-1/3
             h-[350px] w-[350px]
-            rounded-full bg-violet-500/10
+            rounded-full bg-indigo-500/10
             blur-[120px]
           "
                 />
@@ -68,7 +68,7 @@ export default function HeroSection() {
                     <span
                         className="
               bg-gradient-to-r
-              from-indigo-500 via-violet-500 to-cyan-500
+              from-indigo-500 via-indigo-400 to-indigo-600
               bg-clip-text text-transparent
             "
                     >
@@ -92,11 +92,11 @@ export default function HeroSection() {
                 {/* Buttons */}
                 <div className="mt-10 flex flex-col justify-center gap-4 sm:flex-row">
                     <Link
-                        href="/editor"
+                        href="/problem-solver"
                         className="
               group flex items-center justify-center gap-2
               rounded-xl bg-gradient-to-r
-              from-indigo-600 to-violet-600
+              from-indigo-600 to-indigo-700
               px-7 py-4 font-semibold text-white
               shadow-xl shadow-indigo-500/20
               transition hover:-translate-y-0.5
@@ -111,7 +111,7 @@ export default function HeroSection() {
                     </Link>
 
                     <Link
-                        href="#features"
+                        href="/roadmap"
                         className="
               flex items-center justify-center gap-2
               rounded-xl border border-[var(--border)]
@@ -127,7 +127,7 @@ export default function HeroSection() {
 
                 {/* Trust */}
                 <div className="mt-12 flex items-center justify-center gap-2 text-sm text-[var(--muted)]">
-                    <span className="h-2 w-2 rounded-full bg-emerald-500" />
+                    <span className="h-2 w-2 rounded-full bg-indigo-500" />
                     AI-powered learning • Real-time assistance
                 </div>
             </div>

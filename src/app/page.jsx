@@ -12,21 +12,13 @@ export default function HomePage() {
   return (
     <main className="min-h-screen overflow-hidden bg-[var(--background)] text-[var(--foreground)] transition-colors duration-300">
       <Navbar />
-
       <HeroSection />
-
       <FeaturesSection />
-
       <CodeInsights />
-
       <LearningEfficiency />
-
       <StudentInsights />
-
       <CodingEnvironments />
-
       <CTASection />
-
       <Footer />
     </main>
   );
