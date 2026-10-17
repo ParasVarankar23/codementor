@@ -1603,7 +1603,12 @@ window.addEventListener('unhandledrejection',function(ev){window.parent.postMess
             const data = await res.json();
 
             if (!res.ok) {
-                addLine({ type: "error", text: data.error || data.message || `HTTP ${res.status}` });
+                addLine({
+                    type: "error",
+                    text: [data.error || data.message || `HTTP ${res.status}`, data.details]
+                        .filter(Boolean)
+                        .join(": "),
+                });
                 return;
             }
 

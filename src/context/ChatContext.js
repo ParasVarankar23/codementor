@@ -42,6 +42,7 @@ export function ChatProvider({ children }) {
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(false);
   const [chatsLoading, setChatsLoading] = useState(true);
+  const [chatsError, setChatsError] = useState(null);
   const [aiTyping, setAiTyping] = useState(false);
   const [currentLanguage, setCurrentLanguage] = useState("javascript");
 
@@ -51,31 +52,41 @@ export function ChatProvider({ children }) {
       setChats([]);
       setCurrentChatId(null);
       setMessages([]);
+      setChatsError(null);
       setChatsLoading(false);
       return;
     }
 
+    setChats([]);
+    setChatsError(null);
     setChatsLoading(true);
     const chatsRef = collection(db, "chats");
     const q = query(
       chatsRef,
-      where("userId", "==", user.uid),
-      orderBy("updatedAt", "desc")
+      where("userId", "==", user.uid)
     );
 
     const unsubscribe = onSnapshot(q, 
       (snapshot) => {
-        const chatsData = snapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
-          createdAt: doc.data().createdAt?.toDate() || new Date(),
-          updatedAt: doc.data().updatedAt?.toDate() || new Date(),
-        }));
+        const chatsData = snapshot.docs
+          .filter((chatDoc) =>
+            Object.prototype.hasOwnProperty.call(chatDoc.data(), "updatedAt")
+          )
+          .map((chatDoc) => ({
+            id: chatDoc.id,
+            ...chatDoc.data(),
+            createdAt: chatDoc.data().createdAt?.toDate() || new Date(),
+            updatedAt: chatDoc.data().updatedAt?.toDate() || new Date(),
+          }))
+          .sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime());
         setChats(chatsData);
+        setChatsError(null);
         setChatsLoading(false);
       },
       (error) => {
         console.error("Error loading chats:", error);
+        setChats([]);
+        setChatsError("Chat history could not be loaded. Check your connection and access to this account's chats.");
         setChatsLoading(false);
       }
     );
@@ -505,6 +516,7 @@ const fixCodeWithAI = useCallback(async (codeToFix, errorMessage = "") => {
     rawMessages: messages,
     loading,
     chatsLoading,
+    chatsError,
     aiTyping,
     currentLanguage,
     

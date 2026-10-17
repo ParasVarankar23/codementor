@@ -99,6 +99,7 @@ export default function LoginPage() {
                                     src="/logo.png"
                                     alt="CodeMentor Logo"
                                     fill
+                                    sizes="80px"
                                     className="object-contain"
                                     priority
                                 />

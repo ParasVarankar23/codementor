@@ -26,7 +26,8 @@ export default function ChatSidebar({ isOpen, onClose }) {
     createNewChat,
     deleteChat,
     renameChat,
-    chatsLoading
+    chatsLoading,
+    chatsError
   } = useChat();
   const router = useRouter();
   const [editingId, setEditingId] = useState(null);
@@ -132,6 +133,10 @@ export default function ChatSidebar({ isOpen, onClose }) {
           <div className="flex justify-center py-8">
             <div className="w-6 h-6 border-2 border-[#FF5A1F] border-t-transparent rounded-full animate-spin" />
           </div>
+        ) : chatsError ? (
+          <p className="px-3 py-4 text-center text-sm text-red-400" role="alert">
+            {chatsError}
+          </p>
         ) : chats.length === 0 ? (
           <div className="text-center py-8">
             <FaComment className="text-gray-600 text-3xl mx-auto mb-2" />

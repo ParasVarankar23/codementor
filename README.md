@@ -16,6 +16,17 @@ bun dev
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
+## Code execution sandbox
+
+Code execution requires a separate sandbox service. Set `SANDBOX_URL` in
+`.env` to that service's HTTP execution endpoint, then restart the Next.js
+development server. Do not point it at the Next.js app itself. The service
+must accept a JSON `POST` containing `language`, `files`, and `stdin`, and
+return JSON with `stdout`/`output` and optional `stderr` fields, or a
+successful `text/plain` response containing the program output. The configured
+Railway endpoint is `/execute`; its Docker daemon must be available for code
+execution to succeed.
+
 You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
