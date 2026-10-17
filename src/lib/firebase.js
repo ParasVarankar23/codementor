@@ -22,6 +22,17 @@ const firebaseConfig = {
   measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID,
 };
 
+const missingFirebaseConfig = Object.entries(firebaseConfig)
+  .filter(([, value]) => !value || !String(value).trim())
+  .map(([key]) => key);
+
+if (missingFirebaseConfig.length > 0 && typeof window !== "undefined") {
+  console.warn(
+    "Firebase config is incomplete. Add the missing NEXT_PUBLIC_FIREBASE_* values to .env.local and restart the app.",
+    missingFirebaseConfig
+  );
+}
+
 const app = getApps().some((existingApp) => existingApp.name === "[DEFAULT]")
   ? getApp()
   : initializeApp(firebaseConfig);

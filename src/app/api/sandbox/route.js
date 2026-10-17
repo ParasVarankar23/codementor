@@ -67,10 +67,16 @@ export async function POST(req) {
     });
 
   } catch (err) {
+    const details = err?.message || "Unknown error";
+    const actionableMessage =
+      details.includes("ECONNREFUSED") || details.includes("fetch failed") || details.includes("docker API")
+        ? "Docker sandbox is unreachable. Start Docker Desktop / the Docker daemon and make sure the sandbox service is running on the configured SANDBOX_URL (default http://localhost:3001/execute)."
+        : "Sandbox service is unavailable";
+
     return NextResponse.json(
       {
-        error: "Sandbox service is unavailable",
-        details: err.message
+        error: actionableMessage,
+        details,
       },
       { status: 503 }
     );
