@@ -893,7 +893,10 @@ public class Main {
             return;
         }
 
-        // IMPORTANT: Completely stop any current speech
+        // Mark the previous chunk sequence inactive before canceling its utterance.
+        window.stopCurrentSpeech?.();
+        window.stopCurrentSpeech = null;
+
         try {
             speechSynth.cancel();
             if (window.speechSynthesis) {
@@ -989,9 +992,17 @@ public class Main {
                     };
 
                     utterance.onerror = (event) => {
-                        console.error('Speech error:', event);
-                        currentSentenceIndex++;
-                        setTimeout(speakNextSentence, 100);
+                        if (!isActive || event.error === "canceled" || event.error === "interrupted") {
+                            return;
+                        }
+
+                        console.error("Speech synthesis failed:", event.error || "unknown error");
+                        isActive = false;
+                        setIsSpeaking(false);
+                        setIsAiSpeaking(false);
+                        if (window.monacoEditor?.clearTemporaryHighlights) {
+                            window.monacoEditor.clearTemporaryHighlights();
+                        }
                     };
 
                     setSpeechUtterance(utterance);
@@ -1016,6 +1027,11 @@ public class Main {
     // Stop speaking function - COMPLETELY stops all speech
     const handleStopSpeaking = () => {
         console.log("⏹️ Stopping all speech");
+
+        if (window.stopCurrentSpeech) {
+            window.stopCurrentSpeech();
+            window.stopCurrentSpeech = null;
+        }
 
         if (speechSynth) {
             try {
@@ -1048,10 +1064,6 @@ public class Main {
             window.monacoEditor.clearTemporaryHighlights();
         }
 
-        // Signal any active speech to stop
-        if (window.stopCurrentSpeech) {
-            window.stopCurrentSpeech();
-        }
     };
 
     // Keep the old function for backward compatibility
