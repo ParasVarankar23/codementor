@@ -118,7 +118,7 @@ function Terminal({ lines, onSubmitInput, waitingForInput, promptText }) {
     <div
       className="flex flex-col h-full"
       style={{
-        backgroundColor: "#1e1e1e",
+        backgroundColor: "var(--workbench-panel)",
         fontFamily: "'Cascadia Code','Fira Code','Consolas','Courier New',monospace",
         fontSize: "13px",
         lineHeight: "1.55",
@@ -136,7 +136,7 @@ function Terminal({ lines, onSubmitInput, waitingForInput, promptText }) {
         {lines.map((line, i) => {
           if (line.type === "output") {
             return (
-              <div key={i} style={{ color: "#cccccc", whiteSpace: "pre-wrap" }}>
+              <div key={i} style={{ color: "var(--workbench-text)", whiteSpace: "pre-wrap" }}>
                 {line.text}
               </div>
             );
@@ -151,7 +151,7 @@ function Terminal({ lines, onSubmitInput, waitingForInput, promptText }) {
           if (line.type === "input-echo") {
             return (
               <div key={i} style={{ whiteSpace: "pre-wrap" }}>
-                <span style={{ color: "#cccccc" }}>{line.prompt}</span>
+                <span style={{ color: "var(--workbench-text)" }}>{line.prompt}</span>
                 <span style={{ color: "#4ec9b0" }}>{line.answer}</span>
               </div>
             );
@@ -160,7 +160,7 @@ function Terminal({ lines, onSubmitInput, waitingForInput, promptText }) {
             return (
               <div
                 key={i}
-                style={{ color: "#3c3c3c", fontSize: "11px", padding: "2px 0", whiteSpace: "pre-wrap" }}
+                style={{ color: "var(--workbench-muted)", fontSize: "11px", padding: "2px 0", whiteSpace: "pre-wrap" }}
               >
                 {line.text}
               </div>
@@ -171,7 +171,7 @@ function Terminal({ lines, onSubmitInput, waitingForInput, promptText }) {
 
         {waitingForInput && (
           <div style={{ display: "flex", alignItems: "center", whiteSpace: "pre-wrap" }}>
-            <span style={{ color: "#cccccc" }}>{promptText}</span>
+            <span style={{ color: "var(--workbench-text)" }}>{promptText}</span>
             <span style={{ color: "#4ec9b0" }}>{typed}</span>
             <span
               style={{
@@ -192,8 +192,8 @@ function Terminal({ lines, onSubmitInput, waitingForInput, promptText }) {
 
       <div
         style={{
-          borderTop: "1px solid #2d2d2d",
-          backgroundColor: "#007acc",
+          borderTop: "1px solid var(--workbench-border)",
+          backgroundColor: "#6366F1",
           color: "#ffffff",
           fontSize: "11px",
           padding: "1px 10px",
@@ -325,6 +325,15 @@ export default function Home() {
   const { user, logout } = useAuth();
   const isDark = theme === "dark";
   const monacoTheme = isDark ? "vs-dark" : "vs";
+  const workbenchTheme = {
+    "--workbench-bg": isDark ? "#0B0B0F" : "#F5F7FB",
+    "--workbench-surface": isDark ? "#111318" : "#FFFFFF",
+    "--workbench-editor": isDark ? "#111318" : "#FFFFFF",
+    "--workbench-panel": isDark ? "#111318" : "#F5F7FB",
+    "--workbench-border": isDark ? "#2A2E3A" : "#D7DCE5",
+    "--workbench-text": isDark ? "#EDEDED" : "#172033",
+    "--workbench-muted": isDark ? "#A1A1AA" : "#526075",
+  };
   const router = useRouter();
 
   /* ── UI States ── */
@@ -444,6 +453,12 @@ public class Main {
   const [isResizingPanel, setIsResizingPanel] = useState(false);
   const [rightPanelWidth, setRightPanelWidth] = useState(380);
   const [isResizingRight, setIsResizingRight] = useState(false);
+
+  useEffect(() => {
+    if (window.matchMedia("(max-width: 767px)").matches) {
+      setIsRightPanelOpen(false);
+    }
+  }, []);
 
   // run state
   const [isRunning, setIsRunning] = useState(false);
@@ -1926,10 +1941,13 @@ window.addEventListener('unhandledrejection',function(ev){window.parent.postMess
   return (
     <div
       ref={fullscreenRef}
-      className="flex flex-col h-screen"
+      className="learning-mode-workbench theme-aware-page flex flex-col h-dvh min-h-0 overflow-hidden"
+      data-theme={theme}
+      data-ai-panel-open={isRightPanelOpen}
       style={{
-        backgroundColor: "#0B0B0F",
-        color: "#EDEDED",
+        ...workbenchTheme,
+        backgroundColor: "var(--workbench-bg)",
+        color: "var(--workbench-text)",
         marginLeft: isSidebarOpen ? "256px" : "0",
         transition: "margin-left 0.3s ease"
       }}
@@ -1938,13 +1956,13 @@ window.addEventListener('unhandledrejection',function(ev){window.parent.postMess
 
       {/* ── HEADER ── */}
       <div
-        className="h-14 flex items-center px-4 gap-3"
-        style={{ backgroundColor: "#0f1117", borderBottom: "1px solid #2a2e3a" }}
+        className="learning-mode-toolbar h-14 min-h-14 flex items-center px-3 sm:px-4 gap-3"
+        style={{ backgroundColor: "var(--workbench-surface)", borderBottom: "1px solid var(--workbench-border)" }}
       >
         {/* Progress indicator during explanation */}
         {canResumeExplanation && explanationSteps.length > 0 && (
-          <div className="flex items-center gap-2 px-3 py-1 rounded-lg bg-blue-600/20 border border-blue-600/30">
-            <span className="text-xs text-blue-400 font-medium">
+          <div className="flex items-center gap-2 px-3 py-1 rounded-lg bg-indigo-500/10 border border-indigo-500/30">
+            <span className="text-xs text-indigo-400 font-medium">
               Step {currentExplanationStep + 1}/{explanationSteps.length}
             </span>
             {isExplanationPaused && (
@@ -1953,11 +1971,20 @@ window.addEventListener('unhandledrejection',function(ev){window.parent.postMess
           </div>
         )}
 
-        <div className="flex items-center gap-2">
+        <div className="learning-mode-primary-tools flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => router.push("/")}
+            className="learning-mode-brand flex shrink-0 items-center gap-2 rounded-lg px-2 py-1.5 text-sm font-semibold text-[var(--workbench-text)] hover:bg-indigo-500/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400"
+            aria-label="CodeMentor AI home"
+          >
+            <NextImage src="/logo.png" alt="" width={28} height={28} className="rounded-full" />
+            <span>CodeMentor AI</span>
+          </button>
           <select
             value={language}
             onChange={(e) => handleLanguageChange(e.target.value)}
-            className="h-9 px-3 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#FF5A1F] bg-[#1a1c22] text-[#EDEDED] border-[#2a2e3a]"
+            className="h-9 px-3 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 bg-[var(--workbench-surface)] text-[var(--workbench-text)] border-[var(--workbench-border)]"
           >
             <option value="html">HTML</option>
             <option value="css">CSS</option>
@@ -1971,7 +1998,7 @@ window.addEventListener('unhandledrejection',function(ev){window.parent.postMess
           <button
             onClick={handleRun}
             disabled={isRunning || waitingForInput}
-            className={`h-9 px-5 rounded-lg font-medium text-sm bg-gradient-to-r from-[#FF5A1F] to-[#d93d0b] text-white flex items-center gap-2 transition-all duration-200 ${isRunning || waitingForInput
+            className={`h-9 px-4 rounded-lg font-medium text-sm bg-indigo-500 hover:bg-indigo-600 text-white flex items-center gap-2 transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-300 focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--workbench-surface)] ${isRunning || waitingForInput
                 ? "opacity-60 cursor-not-allowed"
                 : "hover:scale-105 hover:shadow-lg"
               }`}
@@ -1998,7 +2025,7 @@ window.addEventListener('unhandledrejection',function(ev){window.parent.postMess
           <button
             onClick={explainCodeSynchronized}
             disabled={isExplaining || isAIFixing}
-            className={`h-9 px-4 rounded-lg font-medium text-sm bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-2 transition-all ${isExplaining || isAIFixing ? "opacity-50 cursor-not-allowed" : "hover:scale-105"
+            className={`h-9 px-4 rounded-lg font-medium text-sm bg-indigo-600 hover:bg-indigo-700 text-white flex items-center gap-2 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-300 ${isExplaining || isAIFixing ? "opacity-50 cursor-not-allowed" : ""
               }`}
             title="Explain code step by step with highlights"
           >
@@ -2019,7 +2046,7 @@ window.addEventListener('unhandledrejection',function(ev){window.parent.postMess
           <button
             onClick={() => handleFixWithOpenRouter(code)}
             disabled={isAIFixing}
-            className={`h-9 px-4 rounded-lg font-medium text-sm bg-purple-600 hover:bg-purple-700 text-white flex items-center gap-2 transition-all ${isAIFixing ? "opacity-50 cursor-not-allowed" : "hover:scale-105"
+            className={`h-9 px-4 rounded-lg font-medium text-sm bg-violet-600 hover:bg-violet-700 text-white flex items-center gap-2 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-300 ${isAIFixing ? "opacity-50 cursor-not-allowed" : ""
               }`}
             title="Fix code with AI"
           >
@@ -2051,12 +2078,13 @@ window.addEventListener('unhandledrejection',function(ev){window.parent.postMess
 
         <div className="flex-1" />
 
-        <div className="flex items-center gap-1">
+        <div className="learning-mode-secondary-tools flex items-center gap-1">
           {/* Chat History Toggle Button */}
           <button
             onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-            className="w-9 h-9 rounded-lg flex items-center justify-center hover:bg-[#FF5A1F]/10 text-gray-400 hover:text-[#FF5A1F] transition-all"
-            style={{ backgroundColor: "#1a1c22" }}
+            aria-label="Toggle chat history"
+            className="w-9 h-9 rounded-lg flex items-center justify-center text-gray-400 hover:text-indigo-400 hover:bg-indigo-500/10 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400"
+            style={{ backgroundColor: "var(--workbench-editor)" }}
             title="Toggle chat history"
           >
             <FaHistory />
@@ -2072,8 +2100,9 @@ window.addEventListener('unhandledrejection',function(ev){window.parent.postMess
               key={i}
               onClick={btn.action}
               title={btn.title}
-              className="w-9 h-9 rounded-lg flex items-center justify-center hover:bg-[#FF5A1F]/10 text-gray-400 hover:text-[#FF5A1F] transition-all"
-              style={{ backgroundColor: "#1a1c22" }}
+              aria-label={btn.title}
+              className="w-9 h-9 rounded-lg flex items-center justify-center text-gray-400 hover:text-indigo-400 hover:bg-indigo-500/10 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400"
+              style={{ backgroundColor: "var(--workbench-editor)" }}
             >
               {btn.icon}
             </button>
@@ -2084,7 +2113,8 @@ window.addEventListener('unhandledrejection',function(ev){window.parent.postMess
             <div className="relative">
               <button
                 onClick={() => setShowDropdown(!showDropdown)}
-                className="flex items-center justify-center w-9 h-9 rounded-lg hover:bg-[#FF5A1F]/10 transition-all duration-300 cursor-pointer border border-[#2a2e3a]"
+                aria-label="Open user menu"
+                className="flex items-center justify-center w-9 h-9 rounded-lg hover:bg-indigo-500/10 transition-colors cursor-pointer border border-[var(--workbench-border)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400"
               >
                 {user.photoURL ? (
                   <NextImage
@@ -2092,10 +2122,10 @@ window.addEventListener('unhandledrejection',function(ev){window.parent.postMess
                     alt={user.displayName || "User"}
                     width={32}
                     height={32}
-                    className="rounded-full border-2 border-[#FF5A1F]/30"
+                    className="rounded-full border-2 border-indigo-400/50"
                   />
                 ) : (
-                  <div className="w-8 h-8 rounded-full bg-gradient-to-r from-[#FF5A1F] to-[#d93d0b] flex items-center justify-center text-white text-sm font-semibold">
+                  <div className="learning-mode-profile-avatar w-8 h-8 rounded-full bg-indigo-600 flex items-center justify-center text-white text-sm font-semibold">
                     {getUserInitials()}
                   </div>
                 )}
@@ -2108,16 +2138,16 @@ window.addEventListener('unhandledrejection',function(ev){window.parent.postMess
                     className="fixed inset-0 z-40"
                     onClick={() => setShowDropdown(false)}
                   />
-                  <div className="absolute right-0 mt-2 w-48 bg-[#1a1c22] border border-[#2a2e3a] rounded-xl shadow-2xl z-50 overflow-hidden">
-                    <div className="p-3 border-b border-[#2a2e3a]">
+                  <div className="absolute right-0 mt-2 w-48 bg-[var(--workbench-surface)] border border-[var(--workbench-border)] rounded-lg shadow-xl z-50 overflow-hidden">
+                    <div className="p-3 border-b border-[var(--workbench-border)]">
                       <p className="text-xs text-gray-400">Signed in as</p>
                       <p className="text-sm text-white truncate">{user.email}</p>
                     </div>
                     <button
                       onClick={handleLogout}
-                      className="w-full px-4 py-3 text-left text-sm text-gray-300 hover:text-[#FF5A1F] hover:bg-[#FF5A1F]/10 transition-colors flex items-center gap-2 cursor-pointer"
+                      className="w-full px-4 py-3 text-left text-sm text-gray-300 hover:text-indigo-400 hover:bg-indigo-500/10 transition-colors flex items-center gap-2 cursor-pointer"
                     >
-                      <FaSignInAlt className="text-[#FF5A1F]" />
+                      <FaSignInAlt className="text-indigo-400" />
                       Sign Out
                     </button>
                   </div>
@@ -2128,15 +2158,10 @@ window.addEventListener('unhandledrejection',function(ev){window.parent.postMess
             <button
               onClick={handleSignInClick}
               className={`
-                bg-gradient-to-r from-[#FF5A1F] via-[#f47b4e] to-[#d93d0b] 
-                text-white font-semibold px-5 py-2 rounded-lg text-sm 
-                transition-all duration-300 ease-out cursor-pointer
-                hover:shadow-[0_12px_25px_-8px_#FF5A1F] hover:scale-110 
-                active:scale-95 whitespace-nowrap
-                ${scrolled
-                  ? 'shadow-[0_8px_20px_-6px_#FF5A1F] scale-95'
-                  : 'shadow-[0_12px_25px_-8px_#FF5A1F]'
-                }
+                bg-indigo-500 hover:bg-indigo-600
+                text-white font-semibold px-4 py-2 rounded-lg text-sm
+                transition-colors cursor-pointer whitespace-nowrap
+                focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-300 focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--workbench-surface)]
               `}>
               Sign In
             </button>
@@ -2145,11 +2170,11 @@ window.addEventListener('unhandledrejection',function(ev){window.parent.postMess
       </div>
 
       {/* ── MAIN ── */}
-      <div ref={mainContainerRef} className="flex flex-1 overflow-hidden">
+      <div ref={mainContainerRef} className="learning-mode-main relative flex min-h-0 min-w-0 flex-1 overflow-hidden">
         {/* ── LEFT: editor + bottom panel ── */}
-        <div ref={leftPanelRef} className="flex flex-col flex-1 overflow-hidden">
+        <div ref={leftPanelRef} className="learning-mode-editor-pane flex min-w-0 flex-col flex-1 overflow-hidden">
           {/* editor */}
-          <div className="flex-1 overflow-hidden" style={{ backgroundColor: "#1a1c22" }}>
+          <div className="flex-1 overflow-hidden" style={{ backgroundColor: "var(--workbench-editor)" }}>
             <MonacoEditor
               language={(isReactSandpack || isNextSandpack) ? "javascript" : language}
               code={code}
@@ -2163,18 +2188,18 @@ window.addEventListener('unhandledrejection',function(ev){window.parent.postMess
           {isPanelOpen && (
             <>
               <div
-                className="h-[3px] cursor-row-resize hover:bg-[#FF5A1F]/60 transition-colors"
-                style={{ backgroundColor: "#2a2e3a" }}
+                className="learning-mode-terminal-resizer h-[3px] cursor-row-resize hover:bg-indigo-400/60 transition-colors"
+                style={{ backgroundColor: "var(--workbench-border)" }}
                 onMouseDown={(e) => { e.preventDefault(); setIsResizingPanel(true); }}
               />
 
               <div
-                className="flex flex-col"
-                style={{ height: panelHeight, backgroundColor: "#252526", borderTop: "1px solid #2a2e3a" }}
+                className="learning-mode-terminal-panel flex min-h-0 flex-col"
+                style={{ height: panelHeight, backgroundColor: "var(--workbench-panel)", borderTop: "1px solid var(--workbench-border)" }}
               >
                 <div
                   className="flex items-center px-2 py-1 gap-0"
-                  style={{ borderBottom: "1px solid #2a2e3a", backgroundColor: "#1e1e1e" }}
+                  style={{ borderBottom: "1px solid var(--workbench-border)", backgroundColor: "var(--workbench-surface)" }}
                 >
                   {["output", "console", "problems", "debug"].map((name) => (
                     <Tab key={name} name={name} activeTab={activeTab} setActiveTab={setActiveTab} />
@@ -2204,7 +2229,7 @@ window.addEventListener('unhandledrejection',function(ev){window.parent.postMess
                         theme={isDark ? "dark" : "light"}
                       >
                         <SandpackLayout style={{ height: "100%", display: "flex", flexDirection: "row" }}>
-                          <div style={{ minWidth: 180, borderRight: "1px solid #2a2e3a", height: "100%" }}>
+                          <div style={{ minWidth: 180, borderRight: "1px solid var(--workbench-border)", height: "100%" }}>
                             <div ref={sandpackExplorerRef} style={{ height: "100%" }}>
                               <SandpackFileExplorer style={{ height: "100%" }} />
                             </div>
@@ -2226,7 +2251,7 @@ window.addEventListener('unhandledrejection',function(ev){window.parent.postMess
                             title="output"
                           />
                         ) : (
-                          <div className="flex-1 flex items-center justify-center" style={{ backgroundColor: "#1e1e1e" }}>
+                          <div className="flex-1 flex items-center justify-center" style={{ backgroundColor: "var(--workbench-editor)" }}>
                             <span style={{ color: "#6a737d", fontStyle: "italic", fontSize: "13px", fontFamily: "monospace" }}>
                               Click ▶ Run to execute…
                             </span>
@@ -2235,7 +2260,7 @@ window.addEventListener('unhandledrejection',function(ev){window.parent.postMess
                         {terminalLines.length > 0 && (
                           <div
                             className="overflow-auto p-2 space-y-[1px]"
-                            style={{ maxHeight: "80px", borderTop: "1px solid #2a2e3a", backgroundColor: "#1e1e1e", fontFamily: "monospace", fontSize: "12px" }}
+                            style={{ maxHeight: "80px", borderTop: "1px solid var(--workbench-border)", backgroundColor: "var(--workbench-editor)", fontFamily: "monospace", fontSize: "12px" }}
                           >
                             {terminalLines.map((l, i) => (
                               <div key={i} style={{ color: l.type === "error" ? "#f14c4c" : "#9cdcfe", whiteSpace: "pre-wrap" }}>
@@ -2258,7 +2283,7 @@ window.addEventListener('unhandledrejection',function(ev){window.parent.postMess
                   {activeTab === "console" && (
                     <div
                       className="h-full overflow-auto p-3 space-y-[1px]"
-                      style={{ backgroundColor: "#1e1e1e", fontFamily: "monospace", fontSize: "13px" }}
+                      style={{ backgroundColor: "var(--workbench-editor)", fontFamily: "monospace", fontSize: "13px" }}
                     >
                       {terminalLines.length === 0 ? (
                         <span style={{ color: "#6a737d", fontStyle: "italic" }}>No logs yet.</span>
@@ -2269,7 +2294,7 @@ window.addEventListener('unhandledrejection',function(ev){window.parent.postMess
                             color:
                               l.type === "error" ? "#f14c4c" :
                                 l.type === "input-echo" ? "#4ec9b0" :
-                                  l.type === "divider" ? "#3c3c3c" : "#cccccc",
+                                  l.type === "divider" ? "#6b7280" : "var(--workbench-text)",
                             whiteSpace: "pre-wrap",
                           }}
                         >
@@ -2280,7 +2305,7 @@ window.addEventListener('unhandledrejection',function(ev){window.parent.postMess
                   )}
 
                   {activeTab === "problems" && (
-                    <div className="h-full overflow-auto p-3 space-y-2" style={{ backgroundColor: "#1e1e1e" }}>
+                    <div className="h-full overflow-auto p-3 space-y-2" style={{ backgroundColor: "var(--workbench-editor)" }}>
                       {terminalLines.filter((l) => l.type === "error").length === 0 ? (
                         <span style={{ color: "#6a737d", fontStyle: "italic", fontSize: "13px", fontFamily: "monospace" }}>
                           No problems detected.
@@ -2307,7 +2332,7 @@ window.addEventListener('unhandledrejection',function(ev){window.parent.postMess
                   )}
 
                   {activeTab === "debug" && (
-                    <div className="h-full overflow-auto p-4 space-y-2" style={{ backgroundColor: "#1e1e1e", fontFamily: "monospace", fontSize: "12px" }}>
+                    <div className="h-full overflow-auto p-4 space-y-2" style={{ backgroundColor: "var(--workbench-editor)", fontFamily: "monospace", fontSize: "12px" }}>
                       {[
                         ["Language", language.toUpperCase()],
                         ["Lines", code.split("\n").length],
@@ -2333,31 +2358,31 @@ window.addEventListener('unhandledrejection',function(ev){window.parent.postMess
         {isRightPanelOpen && (
           <>
             <div
-              className="w-[3px] cursor-col-resize hover:bg-[#FF5A1F]/60 transition-colors"
-              style={{ backgroundColor: "#2a2e3a" }}
+              className="learning-mode-ai-resizer w-[3px] cursor-col-resize hover:bg-indigo-400/60 transition-colors"
+              style={{ backgroundColor: "var(--workbench-border)" }}
               onMouseDown={(e) => { e.preventDefault(); setIsResizingRight(true); }}
             />
 
             <div
-              className="flex flex-col"
-              style={{ width: rightPanelWidth, backgroundColor: "#0f1117", borderLeft: "1px solid #2a2e3a" }}
+              className="learning-mode-ai-panel flex min-h-0 flex-col"
+              style={{ width: rightPanelWidth, backgroundColor: "var(--workbench-surface)", borderLeft: "1px solid var(--workbench-border)" }}
             >
               {/* avatar */}
               <div
                 className="flex flex-col items-center justify-center p-6"
-                style={{ height: "30%", borderBottom: "1px solid #2a2e3a" }}
+                style={{ height: "30%", borderBottom: "1px solid var(--workbench-border)" }}
               >
                 <div className="relative mb-6">
-                  <div className="w-24 h-24 rounded-full bg-gradient-to-r from-[#FF5A1F] to-[#d93d0b] p-[2px]">
-                    <div className="w-full h-full rounded-full bg-[#1a1c22] flex items-center justify-center">
-                      <FaRobot className="text-4xl text-[#FF5A1F]" />
+                  <div className="w-24 h-24 rounded-full bg-indigo-500 p-[2px]">
+                    <div className="w-full h-full rounded-full bg-[var(--workbench-surface)] flex items-center justify-center">
+                      <FaRobot className="text-4xl text-indigo-400" />
                     </div>
                   </div>
                   <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 w-48 flex items-center justify-center gap-[2px]">
                     {[...Array(20)].map((_, i) => (
                       <div
                         key={i}
-                        className={`w-[3px] bg-[#FF5A1F] rounded-full ${isAiSpeaking ? "animate-wave" : "opacity-20"}`}
+                        className={`w-[3px] bg-indigo-400 rounded-full ${isAiSpeaking ? "animate-wave" : "opacity-20"}`}
                         style={{ height: isAiSpeaking ? `${Math.random() * 24 + 4}px` : "4px", animationDelay: `${i * 0.05}s` }}
                       />
                     ))}
@@ -2366,9 +2391,9 @@ window.addEventListener('unhandledrejection',function(ev){window.parent.postMess
                 <div className="w-full text-center mt-8">
                   <div className="flex items-center justify-center gap-2 mb-1">
                     <h3 className="text-white font-semibold text-sm">AI Mentor</h3>
-                    <span className={`w-2 h-2 rounded-full ${isAiSpeaking ? "bg-[#FF5A1F] animate-pulse" : "bg-green-400"}`} />
+                    <span className={`w-2 h-2 rounded-full ${isAiSpeaking ? "bg-indigo-400 animate-pulse" : "bg-green-400"}`} />
                     {isAiSpeaking && (
-                      <button onClick={stopSpeaking} className="text-gray-400 hover:text-[#FF5A1F]">
+                      <button onClick={stopSpeaking} className="text-gray-400 hover:text-indigo-400" aria-label="Stop speech">
                         <FaStop size={10} />
                       </button>
                     )}
@@ -2383,18 +2408,18 @@ window.addEventListener('unhandledrejection',function(ev){window.parent.postMess
                   {aiMessages.map((msg) => (
                     <div key={msg.id} className={`flex ${msg.type === "user" ? "justify-end" : "justify-start"}`}>
                       <div className={`flex gap-3 max-w-[85%] ${msg.type === "user" ? "flex-row-reverse" : ""}`}>
-                        <div className="w-7 h-7 rounded-full flex-shrink-0 bg-gradient-to-r from-[#FF5A1F] to-[#d93d0b] p-[1px]">
-                          <div className="w-full h-full rounded-full bg-[#1a1c22] flex items-center justify-center">
+                        <div className="w-7 h-7 rounded-full flex-shrink-0 bg-indigo-500 p-[1px]">
+                          <div className="w-full h-full rounded-full bg-[var(--workbench-surface)] flex items-center justify-center">
                             {msg.type === "user"
-                              ? <FaUser className="text-[#FF5A1F]" style={{ fontSize: "9px" }} />
-                              : <FaRobot className="text-[#FF5A1F]" style={{ fontSize: "9px" }} />}
+                              ? <FaUser className="text-indigo-400" style={{ fontSize: "9px" }} />
+                              : <FaRobot className="text-indigo-400" style={{ fontSize: "9px" }} />}
                           </div>
                         </div>
                         <div className="flex-1">
                           <div
                             className={`p-3 rounded-2xl text-xs leading-relaxed ${msg.type === "user"
-                                ? "bg-[#FF5A1F] text-white rounded-tr-none"
-                                : "bg-[#1a1c22] text-gray-300 rounded-tl-none border border-[#2a2e3a]"
+                                ? "learning-mode-user-message bg-indigo-600 text-white rounded-tr-none"
+                                : "bg-[var(--workbench-panel)] text-gray-300 rounded-tl-none border border-[var(--workbench-border)]"
                               }`}
                           >
                             <ReactMarkdown
@@ -2410,7 +2435,7 @@ window.addEventListener('unhandledrejection',function(ev){window.parent.postMess
                                 },
                                 strong({ node, children, ...props }) {
                                   return (
-                                    <strong className="font-bold text-[#FF5A1F]" {...props}>
+                                    <strong className="font-bold text-indigo-400" {...props}>
                                       {children}
                                     </strong>
                                   );
@@ -2439,20 +2464,20 @@ window.addEventListener('unhandledrejection',function(ev){window.parent.postMess
                                 code({ node, inline, className, children, ...props }) {
                                   const match = /language-(\w+)/.exec(className || '');
                                   return !inline && match ? (
-                                    <pre className="bg-[#0a0c12] p-3 rounded-lg overflow-x-auto my-3 border border-[#2a2e3a]">
+                                    <pre className="bg-[var(--workbench-bg)] p-3 rounded-lg overflow-x-auto my-3 border border-[var(--workbench-border)]">
                                       <code className={`${className} text-green-400 text-xs`} {...props}>
                                         {children}
                                       </code>
                                     </pre>
                                   ) : (
-                                    <code className="bg-[#2a2e3a] px-1.5 py-0.5 rounded text-[#4ec9b0] font-mono text-xs" {...props}>
+                                    <code className="bg-indigo-500/10 px-1.5 py-0.5 rounded text-indigo-300 font-mono text-xs" {...props}>
                                       {children}
                                     </code>
                                   );
                                 },
                                 a({ node, children, href, ...props }) {
                                   return (
-                                    <a href={href} className="text-[#FF5A1F] hover:underline font-medium" target="_blank" rel="noopener noreferrer" {...props}>
+                                    <a href={href} className="text-indigo-400 hover:text-indigo-300 hover:underline font-medium" target="_blank" rel="noopener noreferrer" {...props}>
                                       {children}
                                     </a>
                                   );
@@ -2480,7 +2505,7 @@ window.addEventListener('unhandledrejection',function(ev){window.parent.postMess
                                 },
                                 blockquote({ node, children, ...props }) {
                                   return (
-                                    <blockquote className="border-l-2 border-[#FF5A1F] pl-3 my-2 italic text-gray-400" {...props}>
+                                    <blockquote className="border-l-2 border-indigo-400 pl-3 my-2 italic text-gray-400" {...props}>
                                       {children}
                                     </blockquote>
                                   );
@@ -2505,7 +2530,7 @@ window.addEventListener('unhandledrejection',function(ev){window.parent.postMess
                                 <button
                                   onClick={() => handleApplyAndExplain(msg.originalCode, msg.fixedCode)}
                                   disabled={isExplaining}
-                                  className="px-3 py-1.5 rounded-lg text-xs bg-blue-600 hover:bg-blue-700 text-white transition-colors flex items-center gap-1"
+                                  className="px-3 py-1.5 rounded-lg text-xs bg-indigo-600 hover:bg-indigo-700 text-white transition-colors flex items-center gap-1"
                                   title="Apply code and highlight what was fixed"
                                 >
                                   {isExplaining ? (
@@ -2521,7 +2546,7 @@ window.addEventListener('unhandledrejection',function(ev){window.parent.postMess
                                     setCopiedIndex(msg.id);
                                     setTimeout(() => setCopiedIndex(null), 2000);
                                   }}
-                                  className="px-3 py-1.5 rounded-lg text-xs bg-purple-600 hover:bg-purple-700 text-white transition-colors flex items-center gap-1"
+                                  className="px-3 py-1.5 rounded-lg text-xs bg-violet-600 hover:bg-violet-700 text-white transition-colors flex items-center gap-1"
                                 >
                                   {copiedIndex === msg.id ? <FaCheck size={10} /> : <FaCopy size={10} />}
                                   Copy
@@ -2538,12 +2563,12 @@ window.addEventListener('unhandledrejection',function(ev){window.parent.postMess
                   {aiTyping && (
                     <div className="flex justify-start">
                       <div className="flex gap-3">
-                        <div className="w-7 h-7 rounded-full bg-gradient-to-r from-[#FF5A1F] to-[#d93d0b] p-[1px]">
-                          <div className="w-full h-full rounded-full bg-[#1a1c22] flex items-center justify-center">
-                            <FaRobot className="text-[#FF5A1F]" style={{ fontSize: "9px" }} />
+                        <div className="w-7 h-7 rounded-full bg-indigo-500 p-[1px]">
+                          <div className="w-full h-full rounded-full bg-[var(--workbench-surface)] flex items-center justify-center">
+                            <FaRobot className="text-indigo-400" style={{ fontSize: "9px" }} />
                           </div>
                         </div>
-                        <div className="bg-[#1a1c22] px-4 py-3 rounded-2xl rounded-tl-none border border-[#2a2e3a]">
+                        <div className="bg-[var(--workbench-panel)] px-4 py-3 rounded-lg rounded-tl-none border border-[var(--workbench-border)]">
                           <div className="flex gap-1">
                             {[0, 0.2, 0.4].map((d, i) => (
                               <span key={i} className="w-1.5 h-1.5 bg-gray-500 rounded-full animate-bounce" style={{ animationDelay: `${d}s` }} />
@@ -2557,7 +2582,7 @@ window.addEventListener('unhandledrejection',function(ev){window.parent.postMess
                 </div>
 
                 {/* chat input with file upload and voice */}
-                <div className="p-3 border-t border-[#2a2e3a]" style={{ backgroundColor: "#0a0c12" }}>
+                <div className="p-3 border-t border-[var(--workbench-border)]" style={{ backgroundColor: "var(--workbench-surface)" }}>
                   <div className="flex gap-2">
                     <input
                       type="text"
@@ -2565,7 +2590,7 @@ window.addEventListener('unhandledrejection',function(ev){window.parent.postMess
                       onChange={(e) => setUserInput(e.target.value)}
                       onKeyPress={(e) => e.key === "Enter" && handleSendMessage()}
                       placeholder="Ask me anything about coding..."
-                      className="flex-1 h-9 px-3 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-[#FF5A1F] bg-[#1a1c22] text-[#EDEDED] border border-[#2a2e3a]"
+                      className="flex-1 min-w-0 h-9 px-3 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-indigo-400 bg-[var(--workbench-editor)] text-[var(--workbench-text)] border border-[var(--workbench-border)] placeholder:text-[var(--workbench-muted)]"
                     />
                     <input
                       type="file"
@@ -2585,7 +2610,7 @@ window.addEventListener('unhandledrejection',function(ev){window.parent.postMess
                         onClick={toggleListening}
                         className={`relative w-9 h-9 rounded-lg border transition-all flex items-center justify-center ${isListening
                             ? 'bg-red-600 border-red-600 text-white shadow-lg shadow-red-500/50'
-                            : 'bg-[#1a1c22] border-[#2a2e3a] text-gray-400 hover:text-[#FF5A1F] hover:border-[#FF5A1F]'
+                            : 'bg-[var(--workbench-editor)] border-[var(--workbench-border)] text-gray-400 hover:text-indigo-400 hover:border-indigo-400'
                           }`}
                         title={isListening ? "Stop listening" : "Voice input"}
                       >
@@ -2594,7 +2619,7 @@ window.addEventListener('unhandledrejection',function(ev){window.parent.postMess
                     </div>
                     <button
                       onClick={() => fileInputRef.current?.click()}
-                      className="w-9 h-9 rounded-lg bg-[#1a1c22] border border-[#2a2e3a] text-gray-400 hover:text-[#FF5A1F] hover:border-[#FF5A1F] transition-all flex items-center justify-center"
+                      className="w-9 h-9 rounded-lg bg-[var(--workbench-editor)] border border-[var(--workbench-border)] text-gray-400 hover:text-indigo-400 hover:border-indigo-400 transition-colors flex items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400"
                       title="Upload code file"
                     >
                       📎
@@ -2637,7 +2662,7 @@ window.addEventListener('unhandledrejection',function(ev){window.parent.postMess
                       <button
                         onClick={handleSendMessage}
                         disabled={isAIFixing || isExplaining || aiTyping}
-                        className={`w-9 h-9 rounded-lg bg-gradient-to-r from-[#FF5A1F] to-[#d93d0b] text-white flex items-center justify-center transition-all ${isAIFixing || isExplaining || aiTyping ? 'opacity-50 cursor-not-allowed' : 'hover:scale-105'
+                        className={`w-9 h-9 rounded-lg bg-indigo-500 hover:bg-indigo-600 text-white flex items-center justify-center transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-300 ${isAIFixing || isExplaining || aiTyping ? 'opacity-50 cursor-not-allowed' : ''
                           }`}
                       >
                         {isAIFixing || isExplaining || aiTyping ? <FaSpinner className="animate-spin" /> : <FaPaperPlane style={{ fontSize: "11px" }} />}
@@ -2677,19 +2702,19 @@ window.addEventListener('unhandledrejection',function(ev){window.parent.postMess
                           </>
                         ) : (
                           <>
-                            <FaLightbulb className="text-blue-400 animate-pulse" />
-                            <span className="text-blue-400 font-semibold">Explaining step {currentExplanationStep + 1}/{explanationSteps.length} - Click Pause to ask questions</span>
+                            <FaLightbulb className="text-indigo-400 animate-pulse" />
+                            <span className="text-indigo-400 font-semibold">Explaining step {currentExplanationStep + 1}/{explanationSteps.length} - Click Pause to ask questions</span>
                           </>
                         )}
                       </>
                     ) : (
                       <>
-                        <FaVolumeUp className={isAiSpeaking ? "text-[#FF5A1F] animate-pulse" : ""} />
+                        <FaVolumeUp className={isAiSpeaking ? "text-indigo-400 animate-pulse" : ""} />
                         <span>{isAiSpeaking ? "Speaking…" : "Ask questions, paste code, or use voice"}</span>
                       </>
                     )}
                     {isAiSpeaking && !canResumeExplanation && (
-                      <button onClick={stopSpeaking} className="ml-auto text-gray-500 hover:text-[#FF5A1F]">
+                      <button onClick={stopSpeaking} className="ml-auto text-gray-500 hover:text-indigo-400" aria-label="Stop speech">
                         Stop
                       </button>
                     )}
@@ -2722,11 +2747,13 @@ function Tab({ name, activeTab, setActiveTab }) {
   return (
     <button
       onClick={() => setActiveTab(name)}
-      className="px-4 py-[6px] capitalize text-xs font-medium transition-all"
+      type="button"
+      aria-pressed={active}
+      className="px-4 py-[6px] capitalize text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400"
       style={{
-        backgroundColor: active ? "#1e1e1e" : "transparent",
-        color: active ? "#cccccc" : "#6a737d",
-        borderBottom: active ? "1px solid #FF5A1F" : "1px solid transparent",
+        backgroundColor: active ? "var(--workbench-editor)" : "transparent",
+        color: active ? "var(--workbench-text)" : "var(--workbench-muted)",
+        borderBottom: active ? "1px solid #6366F1" : "1px solid transparent",
         borderRadius: "0",
       }}
     >

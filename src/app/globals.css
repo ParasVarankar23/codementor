@@ -176,6 +176,109 @@ body {
   display: none;
 }
 
+.learning-mode-workbench {
+  --page-accent: #6366f1;
+  --page-accent-strong: #4f46e5;
+}
+
+.learning-mode-workbench[data-theme="light"] .learning-mode-user-message,
+.learning-mode-workbench[data-theme="light"] .learning-mode-profile-avatar {
+  color: #ffffff !important;
+}
+
+.learning-mode-toolbar {
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.learning-mode-toolbar::-webkit-scrollbar {
+  display: none;
+}
+
+.learning-mode-primary-tools,
+.learning-mode-secondary-tools {
+  flex: 0 0 auto;
+}
+
+.learning-mode-workbench[data-theme="light"] [style*="#1e1e1e"],
+.learning-mode-workbench[data-theme="light"] [style*="#1a1c22"],
+.learning-mode-workbench[data-theme="light"] [style*="#252526"] {
+  background-color: var(--workbench-panel) !important;
+}
+
+.learning-mode-workbench[data-theme="light"] [style*="#0B0B0F"],
+.learning-mode-workbench[data-theme="light"] [style*="#0f1117"],
+.learning-mode-workbench[data-theme="light"] [style*="#0a0c12"] {
+  background-color: var(--workbench-surface) !important;
+}
+
+.learning-mode-workbench[data-theme="light"] [style*="#2a2e3a"],
+.learning-mode-workbench[data-theme="light"] [style*="#2d2d2d"] {
+  border-color: var(--workbench-border) !important;
+}
+
+.learning-mode-workbench[data-theme="light"] [style*="#cccccc"],
+.learning-mode-workbench[data-theme="light"] [style*="#9cdcfe"] {
+  color: var(--workbench-text) !important;
+}
+
+.learning-mode-workbench[data-theme="light"] [style*="#6a737d"] {
+  color: var(--workbench-muted) !important;
+}
+
+.learning-mode-workbench[data-theme="light"] [class*="bg-[#0a0c12]"],
+.learning-mode-workbench[data-theme="light"] [class*="bg-[#2a2e3a]"],
+.learning-mode-workbench[data-theme="light"] [class*="bg-[#1a1c22]"] {
+  background-color: var(--workbench-panel) !important;
+}
+
+@media (max-width: 1023px) {
+  .learning-mode-brand span {
+    display: none;
+  }
+
+  .learning-mode-toolbar {
+    gap: 0.5rem;
+    padding-inline: 0.5rem;
+  }
+
+  .learning-mode-primary-tools,
+  .learning-mode-secondary-tools {
+    gap: 0.375rem;
+  }
+}
+
+@media (max-width: 767px) {
+  .learning-mode-workbench {
+    margin-left: 0 !important;
+  }
+
+  .learning-mode-main {
+    position: relative;
+  }
+
+  .learning-mode-editor-pane {
+    width: 100%;
+  }
+
+  .learning-mode-ai-resizer {
+    display: none;
+  }
+
+  .learning-mode-ai-panel {
+    position: absolute;
+    inset: 0 0 0 auto;
+    z-index: 30;
+    width: min(100%, 400px) !important;
+    max-width: 100%;
+    box-shadow: -16px 0 32px rgb(0 0 0 / 20%);
+  }
+
+  .learning-mode-terminal-panel {
+    max-height: 45vh;
+  }
+}
+
 .problem-solver-workbench [class~="text-[#FF5A1F]"] {
   color: #6366f1 !important;
 }

@@ -116,6 +116,18 @@ export default function RoadmapOverviewPage() {
 
   const progress = roadmapData.progress?.percentComplete || 0;
   const completedWeeks = roadmapData.completedWeeks || [];
+  const technology =
+    typeof roadmapData.technology === 'string'
+      ? roadmapData.technology
+      : typeof roadmapData.userData?.technology === 'string'
+        ? roadmapData.userData.technology
+        : 'programming';
+  const timeline =
+    typeof roadmapData.timeline === 'string'
+      ? roadmapData.timeline
+      : typeof roadmapData.userData?.timeline === 'string'
+        ? roadmapData.userData.timeline
+        : 'your selected timeframe';
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: isDark ? '#0B0B0F' : '#f5f5f5' }}>
@@ -157,7 +169,7 @@ export default function RoadmapOverviewPage() {
           <div className="flex items-start gap-6">
             <div className="flex-shrink-0">
               <div className="w-24 h-24 rounded-3xl bg-gradient-to-br from-[#FF5A1F] to-[#d93d0b] flex items-center justify-center text-white text-5xl shadow-2xl">
-                {techEmojis[roadmapData.technology] || '💻'}
+                {techEmojis[technology] || '💻'}
               </div>
             </div>
             
@@ -166,10 +178,10 @@ export default function RoadmapOverviewPage() {
                 {roadmapData.proficiency} • {roadmapData.persona}
               </div>
               <h1 className="text-5xl font-bold mb-4 capitalize" style={{ color: isDark ? '#EDEDED' : '#1a1a1a' }}>
-                {roadmapData.technology.replace('+', ' + ')} Roadmap
+                {technology.replace('+', ' + ')} Roadmap
               </h1>
               <p className="text-lg text-gray-500 mb-6">
-                Your personalized {roadmapData.timeline.toLowerCase()} learning journey
+                Your personalized {timeline.toLowerCase()} learning journey
               </p>
               
               {/* Progress Bar */}
@@ -190,7 +202,7 @@ export default function RoadmapOverviewPage() {
                 <div className="flex items-center gap-2 px-4 py-2 rounded-xl" style={{ backgroundColor: isDark ? '#0B0B0F' : '#f5f5f5' }}>
                   <FaCalendar className="text-[#FF5A1F]" />
                   <span className="text-sm font-medium" style={{ color: isDark ? '#EDEDED' : '#1a1a1a' }}>
-                    {roadmapData.timeline}
+                    {timeline}
                   </span>
                 </div>
                 <div className="flex items-center gap-2 px-4 py-2 rounded-xl" style={{ backgroundColor: isDark ? '#0B0B0F' : '#f5f5f5' }}>
@@ -325,7 +337,7 @@ export default function RoadmapOverviewPage() {
               Congratulations! 🎉
             </h3>
             <p className="text-lg text-gray-500 mb-6">
-              You've completed the entire {roadmapData.technology.replace('+', ' + ')} roadmap!
+              You've completed the entire {technology.replace('+', ' + ')} roadmap!
             </p>
             <div className="flex gap-4 justify-center">
               <button

@@ -207,6 +207,7 @@ export default function RoadmapPage() {
       // Add userData to roadmap for week page compatibility
       const roadmapWithUserData = {
         ...data.roadmap,
+        ...formData,
         userData: formData
       };
 
@@ -601,4 +602,3 @@ export default function RoadmapPage() {
     </>
   );
 }
-
