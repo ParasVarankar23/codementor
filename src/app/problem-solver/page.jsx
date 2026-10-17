@@ -1774,20 +1774,6 @@ window.addEventListener('unhandledrejection',function(ev){window.parent.postMess
                         onClick={() => router.push("/")}
                     >
                         Home</button>
-                    <select
-                        value={language}
-                        onChange={(e) => handleLanguageChange(e.target.value)}
-                        className="h-9 px-3 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-transparent text-[var(--workbench-text)] border-[var(--workbench-border)]"
-                    >
-                        <option value="html">HTML</option>
-                        <option value="css">CSS</option>
-                        <option value="javascript">JavaScript</option>
-                        <option value="react">React.js</option>
-                        <option value="python">Python</option>
-                        <option value="node">Node.js</option>
-                        <option value="java">Java</option>
-                    </select>
-
                     <button
                         onClick={handleRun}
                         disabled={isRunning || waitingForInput}
@@ -1848,37 +1834,6 @@ window.addEventListener('unhandledrejection',function(ev){window.parent.postMess
                     >
                         <FaHistory />
                     </button>
-
-                    <label className="sr-only" htmlFor="toolbar-speech-language">
-                        Speech language
-                    </label>
-                    <select
-                        id="toolbar-speech-language"
-                        value={selectedVoiceLanguage}
-                        onChange={(event) => {
-                            const selectedLanguage = event.target.value;
-                            setSelectedVoiceLanguage(selectedLanguage);
-                            if (selectedLanguage !== "all") {
-                                const languageVoice = availableVoices.find((voice) => voice.lang === selectedLanguage);
-                                if (languageVoice) setSelectedVoice(languageVoice);
-                            }
-                        }}
-                        aria-label="Select speech language"
-                        title="Select speech language"
-                        className="h-9 max-w-[112px] sm:max-w-[150px] rounded-lg border border-[var(--workbench-border)] bg-[var(--workbench-editor)] px-2 text-xs text-[var(--workbench-text)] focus:outline-none focus:ring-2 focus:ring-indigo-400"
-                    >
-                        <option value="all">Speech: All</option>
-                        {speechLanguages.map((speechLanguage) => {
-                            const languageName = speechLanguageNames?.of(speechLanguage);
-                            return (
-                                <option key={speechLanguage} value={speechLanguage}>
-                                    {languageName && languageName !== speechLanguage
-                                        ? `${languageName} (${speechLanguage})`
-                                        : speechLanguage}
-                                </option>
-                            );
-                        })}
-                    </select>
 
                     {[
                         { icon: isDark ? <FaSun className="text-lg" /> : <FaMoon className="text-lg" />, action: () => setTheme(isDark ? "light" : "dark"), title: "Toggle theme" },

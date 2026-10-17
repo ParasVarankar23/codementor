@@ -15,7 +15,8 @@ import {
 import axios from "axios";
 import NextImage from "next/image";
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   FaCheck,
   FaComments,
@@ -30,7 +31,7 @@ import {
   FaPaperPlane,
   FaRobot,
   FaRocket,
-  FaSignInAlt,
+  FaSignOutAlt,
   FaSpinner,
   FaStop,
   FaSun,
@@ -317,38 +318,6 @@ const detectLanguageFromCode = (code) => {
   return 'javascript';
 };
 
-const LEARNING_MODE_LANGUAGES = [
-  { value: "html", label: "HTML" },
-  { value: "css", label: "CSS" },
-  { value: "javascript", label: "JavaScript" },
-  { value: "react", label: "React.js" },
-  { value: "python", label: "Python" },
-  { value: "node", label: "Node.js" },
-  { value: "java", label: "Java" },
-];
-
-const ROADMAP_EDITOR_LANGUAGES = {
-  "html+css": ["html", "css"],
-  html: ["html"],
-  css: ["css"],
-  javascript: ["javascript"],
-  reactjs: ["react"],
-  "react.js": ["react"],
-  nodejs: ["node"],
-  "node.js": ["node"],
-  python: ["python"],
-  java: ["java"],
-};
-
-const getRoadmapEditorLanguages = (technology) => {
-  const normalizedTechnology = String(technology || "")
-    .trim()
-    .toLowerCase()
-    .replace(/\s+/g, "");
-
-  return ROADMAP_EDITOR_LANGUAGES[normalizedTechnology] || [];
-};
-
 /* ═══════════════════════════════════════════════════════════════════════════
    MAIN PAGE
 ═══════════════════════════════════════════════════════════════════════════ */
@@ -371,6 +340,9 @@ export default function Home() {
   /* ── UI States ── */
   const [scrolled, setScrolled] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
+  const [showSignOutConfirmation, setShowSignOutConfirmation] = useState(false);
+  const [userMenuPosition, setUserMenuPosition] = useState({ top: 0, right: 12 });
+  const userMenuButtonRef = useRef(null);
 
   /* ── AI Fix States ── */
   const [isAIFixing, setIsAIFixing] = useState(false);
@@ -500,6 +472,17 @@ public class Main {
   const [isAiSpeaking, setIsAiSpeaking] = useState(false);
   const [isAiTyping, setIsAiTyping] = useState(false);
   const [speechSynth, setSpeechSynth] = useState(null);
+  const [availableVoices, setAvailableVoices] = useState([]);
+  const [selectedVoice, setSelectedVoice] = useState(null);
+  const [selectedVoiceLanguage, setSelectedVoiceLanguage] = useState("all");
+  const [showVoiceSelector, setShowVoiceSelector] = useState(false);
+  const [isVoiceListLoading, setIsVoiceListLoading] = useState(true);
+  const speechLanguageNames = useMemo(
+    () => typeof Intl.DisplayNames === "function"
+      ? new Intl.DisplayNames(["en"], { type: "language" })
+      : null,
+    []
+  );
   const [isListening, setIsListening] = useState(false);
   const [recognition, setRecognition] = useState(null);
   const [currentExplanationStep, setCurrentExplanationStep] = useState(0);
@@ -509,6 +492,17 @@ public class Main {
   const explanationPausedRef = useRef(false);
   const [practiceData, setPracticeData] = useState(null);
   const [showNextModule, setShowNextModule] = useState(false);
+  const speechLanguages = useMemo(
+    () => [...new Set(availableVoices.map(({ lang }) => lang).filter(Boolean))]
+      .sort((a, b) => a.localeCompare(b)),
+    [availableVoices]
+  );
+  const voicesForSelectedLanguage = useMemo(
+    () => selectedVoiceLanguage === "all"
+      ? availableVoices
+      : availableVoices.filter(({ lang }) => lang === selectedVoiceLanguage),
+    [availableVoices, selectedVoiceLanguage]
+  );
 
   const messagesEndRef = useRef(null);
   const fullscreenRef = useRef(null);
@@ -521,13 +515,6 @@ public class Main {
   const isNextSandpack = language === "next";
   const isRemote = ["python", "node", "java"].includes(language);
   const isClientSide = ["html", "css", "javascript"].includes(language);
-  const roadmapLanguages = practiceData
-    ? getRoadmapEditorLanguages(practiceData.language)
-    : [];
-  const languageOptions = roadmapLanguages.length
-    ? LEARNING_MODE_LANGUAGES.filter(({ value }) => roadmapLanguages.includes(value))
-    : LEARNING_MODE_LANGUAGES;
-
   /* ── Scroll Effect ── */
   useEffect(() => {
     const handleScroll = () => {
@@ -557,7 +544,39 @@ public class Main {
 
   /* ── speech ── */
   useEffect(() => {
-    if (typeof window !== "undefined" && window.speechSynthesis) setSpeechSynth(window.speechSynthesis);
+    if (typeof window === "undefined" || !window.speechSynthesis) return;
+
+    const synth = window.speechSynthesis;
+    setSpeechSynth(synth);
+
+    const loadVoices = () => {
+      const voices = synth.getVoices();
+      setAvailableVoices(voices);
+      setIsVoiceListLoading(false);
+      const preferredVoice = voices.find((voice) =>
+        voice.name.includes("Google UK") ||
+        voice.name.includes("Samantha") ||
+        voice.name.includes("Female") ||
+        voice.name.includes("Microsoft Zira") ||
+        voice.name.includes("Google US English") ||
+        voice.name.includes("Daniel")
+      ) || voices.find(({ default: isDefault }) => isDefault) || voices[0] || null;
+      setSelectedVoice((currentVoice) => {
+        if (currentVoice && voices.some(({ voiceURI }) => voiceURI === currentVoice.voiceURI)) {
+          return currentVoice;
+        }
+        return preferredVoice;
+      });
+      if (preferredVoice) {
+        setSelectedVoiceLanguage((currentLanguage) =>
+          currentLanguage === "all" ? preferredVoice.lang : currentLanguage
+        );
+      }
+    };
+
+    loadVoices();
+    synth.addEventListener("voiceschanged", loadVoices);
+    return () => synth.removeEventListener("voiceschanged", loadVoices);
   }, []);
 
   /* ── speech recognition (STT) ── */
@@ -756,7 +775,29 @@ public class Main {
 
   const handleLogout = async () => {
     await logout();
+    setShowSignOutConfirmation(false);
+    setShowDropdown(false);
     router.push("/");
+  };
+
+  const toggleUserMenu = () => {
+    if (showDropdown) {
+      setShowDropdown(false);
+      return;
+    }
+
+    const buttonBounds = userMenuButtonRef.current?.getBoundingClientRect();
+    if (buttonBounds) {
+      const menuHeight = 120;
+      const top = buttonBounds.bottom + 12 + menuHeight <= window.innerHeight
+        ? buttonBounds.bottom + 12
+        : Math.max(8, buttonBounds.top - menuHeight - 12);
+      setUserMenuPosition({
+        top,
+        right: Math.max(12, window.innerWidth - buttonBounds.right),
+      });
+    }
+    setShowDropdown(true);
   };
 
   /* ── language change ── */
@@ -919,6 +960,11 @@ public class Main {
       utterance.pitch = 1.1; // Slightly higher for friendly tone
       utterance.volume = 1;
 
+      if (selectedVoice) {
+        utterance.voice = selectedVoice;
+        utterance.lang = selectedVoice.lang;
+      }
+
       // Get available voices
       const voices = speechSynth.getVoices();
 
@@ -932,7 +978,7 @@ public class Main {
         voice.name.includes('Daniel') // Good for technical content
       );
 
-      if (preferredVoice) {
+      if (!selectedVoice && preferredVoice) {
         utterance.voice = preferredVoice;
       }
 
@@ -1200,6 +1246,11 @@ public class Main {
               utterance.pitch = 1.1;      // Slightly higher for friendly tone
               utterance.volume = 1;
 
+              if (selectedVoice) {
+                utterance.voice = selectedVoice;
+                utterance.lang = selectedVoice.lang;
+              }
+
               // Get voices and find a natural one
               const voices = speechSynth.getVoices();
               const preferredVoice = voices.find(voice =>
@@ -1210,7 +1261,7 @@ public class Main {
                 voice.name.includes('Daniel')
               );
 
-              if (preferredVoice) {
+              if (!selectedVoice && preferredVoice) {
                 utterance.voice = preferredVoice;
               }
 
@@ -1992,6 +2043,53 @@ window.addEventListener('unhandledrejection',function(ev){window.parent.postMess
     >
       <ChatSidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
 
+      {showSignOutConfirmation && (
+        <div
+          className="fixed inset-0 z-[1100] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm"
+          onClick={() => setShowSignOutConfirmation(false)}
+        >
+          <section
+            role="alertdialog"
+            aria-modal="true"
+            aria-labelledby="learning-signout-title"
+            aria-describedby="learning-signout-description"
+            className="w-full max-w-sm rounded-xl border p-5 shadow-2xl"
+            style={{
+              backgroundColor: isDark ? "#111318" : "#FFFFFF",
+              borderColor: isDark ? "#2A2E3A" : "#D7DCE5",
+              color: isDark ? "#EDEDED" : "#172033",
+            }}
+            onClick={(event) => event.stopPropagation()}
+          >
+            <h2 id="learning-signout-title" className="text-lg font-semibold">Sign out?</h2>
+            <p
+              id="learning-signout-description"
+              className="mt-2 text-sm"
+              style={{ color: isDark ? "#A1A1AA" : "#526075" }}
+            >
+              Are you sure you want to sign out of your account?
+            </p>
+            <div className="mt-6 flex justify-end gap-3">
+              <button
+                type="button"
+                onClick={() => setShowSignOutConfirmation(false)}
+                className="rounded-lg border px-4 py-2 text-sm font-medium transition-colors hover:bg-gray-500/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400"
+                style={{ borderColor: isDark ? "#2A2E3A" : "#D7DCE5" }}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleLogout}
+                className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-indigo-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 focus-visible:ring-offset-2"
+              >
+                Yes, sign out
+              </button>
+            </div>
+          </section>
+        </div>
+      )}
+
       {/* ── HEADER ── */}
       <div
         className="learning-mode-toolbar h-14 min-h-14 flex items-center px-3 sm:px-4 gap-3"
@@ -2019,17 +2117,6 @@ window.addEventListener('unhandledrejection',function(ev){window.parent.postMess
             <NextImage src="/logo.png" alt="" width={28} height={28} className="rounded-full" />
             <span>CodeMentor AI</span>
           </button>
-          <select
-            value={language}
-            onChange={(e) => handleLanguageChange(e.target.value)}
-            aria-label="Programming language"
-            title={practiceData ? "Language options are limited to this roadmap" : "Select a language"}
-            className="h-9 px-3 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 bg-[var(--workbench-surface)] text-[var(--workbench-text)] border-[var(--workbench-border)]"
-          >
-            {languageOptions.map(({ value, label }) => (
-              <option key={value} value={value}>{label}</option>
-            ))}
-          </select>
 
           <button
             onClick={handleRun}
@@ -2146,10 +2233,13 @@ window.addEventListener('unhandledrejection',function(ev){window.parent.postMess
 
           {/* User Menu / Sign In Button */}
           {user ? (
-            <div className="relative">
+            <div className="relative z-[101]">
               <button
-                onClick={() => setShowDropdown(!showDropdown)}
+                ref={userMenuButtonRef}
+                onClick={toggleUserMenu}
                 aria-label="Open user menu"
+                aria-expanded={showDropdown}
+                aria-haspopup="menu"
                 className="flex items-center justify-center w-9 h-9 rounded-lg hover:bg-indigo-500/10 transition-colors cursor-pointer border border-[var(--workbench-border)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400"
               >
                 {user.photoURL ? (
@@ -2169,25 +2259,51 @@ window.addEventListener('unhandledrejection',function(ev){window.parent.postMess
 
               {/* Dropdown Menu */}
               {showDropdown && (
-                <>
-                  <div
-                    className="fixed inset-0 z-40"
-                    onClick={() => setShowDropdown(false)}
-                  />
-                  <div className="absolute right-0 mt-2 w-48 bg-[var(--workbench-surface)] border border-[var(--workbench-border)] rounded-lg shadow-xl z-50 overflow-hidden">
-                    <div className="p-3 border-b border-[var(--workbench-border)]">
-                      <p className="text-xs text-gray-400">Signed in as</p>
-                      <p className="text-sm text-white truncate">{user.email}</p>
-                    </div>
+                createPortal(
+                  <>
                     <button
-                      onClick={handleLogout}
-                      className="w-full px-4 py-3 text-left text-sm text-gray-300 hover:text-indigo-400 hover:bg-indigo-500/10 transition-colors flex items-center gap-2 cursor-pointer"
+                      type="button"
+                      aria-label="Close account menu"
+                      className="fixed inset-0 cursor-default"
+                      style={{ zIndex: 9998 }}
+                      onClick={() => setShowDropdown(false)}
+                    />
+                    <div
+                      role="menu"
+                      className="fixed w-72 max-w-[calc(100vw-1.5rem)] rounded-xl border shadow-2xl overflow-hidden"
+                      style={{
+                        top: userMenuPosition.top,
+                        right: userMenuPosition.right,
+                        zIndex: 9999,
+                        backgroundColor: isDark ? "#111318" : "#FFFFFF",
+                        borderColor: isDark ? "#2A2E3A" : "#D7DCE5",
+                        color: isDark ? "#EDEDED" : "#172033",
+                      }}
                     >
-                      <FaSignInAlt className="text-indigo-400" />
-                      Sign Out
-                    </button>
-                  </div>
-                </>
+                      <div
+                        className="px-4 py-3 border-b"
+                        style={{ borderColor: isDark ? "#2A2E3A" : "#D7DCE5" }}
+                      >
+                        <p className="text-xs" style={{ color: isDark ? "#A1A1AA" : "#526075" }}>
+                          Signed in as
+                        </p>
+                        <p className="text-sm truncate">{user.email || user.displayName || "Account"}</p>
+                      </div>
+                      <button
+                        onClick={() => {
+                          setShowDropdown(false);
+                          setShowSignOutConfirmation(true);
+                        }}
+                        role="menuitem"
+                        className="w-full px-4 py-3 text-left text-sm flex items-center gap-3 cursor-pointer transition-colors hover:bg-indigo-500/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-indigo-400"
+                      >
+                        <FaSignOutAlt className="text-indigo-500" />
+                        <span>Sign Out</span>
+                      </button>
+                    </div>
+                  </>,
+                  document.body
+                )
               )}
             </div>
           ) : (
@@ -2428,6 +2544,96 @@ window.addEventListener('unhandledrejection',function(ev){window.parent.postMess
                   <div className="flex items-center justify-center gap-2 mb-1">
                     <h3 className="text-white font-semibold text-sm">AI Mentor</h3>
                     <span className={`w-2 h-2 rounded-full ${isAiSpeaking ? "bg-indigo-400 animate-pulse" : "bg-green-400"}`} />
+                    <div className="relative">
+                      <button
+                        type="button"
+                        onClick={() => setShowVoiceSelector((open) => !open)}
+                        aria-label="Choose speech language and voice"
+                        aria-expanded={showVoiceSelector}
+                        title="Choose speech language and voice"
+                        className="flex items-center gap-1.5 rounded-full border border-[var(--workbench-border)] bg-[var(--workbench-panel)] px-3 py-1.5 text-xs text-[var(--workbench-text)] transition-colors hover:bg-indigo-500/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400"
+                      >
+                        <FaMicrophone className="text-indigo-500" />
+                        <span>{selectedVoice?.lang || (isVoiceListLoading ? "Loading…" : "No voices")}</span>
+                        <span aria-hidden="true">▼</span>
+                      </button>
+                      {showVoiceSelector && (
+                        <>
+                          <button
+                            type="button"
+                            aria-label="Close voice selector"
+                            className="fixed inset-0 z-40 cursor-default"
+                            onClick={() => setShowVoiceSelector(false)}
+                          />
+                          <div className="absolute left-1/2 top-full z-50 mt-2 max-h-80 w-72 max-w-[calc(100vw-2rem)] -translate-x-1/2 overflow-y-auto rounded-lg border border-[var(--workbench-border)] bg-[var(--workbench-surface)] text-left shadow-xl">
+                            <div className="sticky top-0 border-b border-[var(--workbench-border)] bg-[var(--workbench-surface)] p-3">
+                              <p className="text-xs font-semibold text-[var(--workbench-text)]">Speech language</p>
+                              <p className="mt-1 text-[10px] text-[var(--workbench-muted)]">Choose an available language and voice</p>
+                              <select
+                                value={selectedVoiceLanguage}
+                                onChange={(event) => {
+                                  const nextLanguage = event.target.value;
+                                  setSelectedVoiceLanguage(nextLanguage);
+                                  if (nextLanguage !== "all") {
+                                    const languageVoice = availableVoices.find(({ lang }) => lang === nextLanguage);
+                                    if (languageVoice) setSelectedVoice(languageVoice);
+                                  }
+                                }}
+                                aria-label="Filter speech voices by language"
+                                className="mt-2 w-full rounded-md border border-[var(--workbench-border)] bg-[var(--workbench-panel)] px-2 py-2 text-xs text-[var(--workbench-text)] focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                              >
+                                <option value="all">All available languages</option>
+                                {speechLanguages.map((speechLanguage) => {
+                                  const languageName = speechLanguageNames?.of(speechLanguage);
+                                  return (
+                                    <option key={speechLanguage} value={speechLanguage}>
+                                      {languageName && languageName !== speechLanguage
+                                        ? `${languageName} (${speechLanguage})`
+                                        : speechLanguage}
+                                    </option>
+                                  );
+                                })}
+                              </select>
+                            </div>
+                            <div className="p-2">
+                              {voicesForSelectedLanguage.length === 0 ? (
+                                <p className="px-3 py-4 text-center text-xs text-[var(--workbench-muted)]">
+                                  {isVoiceListLoading
+                                    ? "Loading speech voices…"
+                                    : "No speech voices are available in this browser. Install a system voice and reload."}
+                                </p>
+                              ) : voicesForSelectedLanguage.map((voice) => (
+                                <button
+                                  key={voice.voiceURI}
+                                  type="button"
+                                  onClick={() => {
+                                    setSelectedVoice(voice);
+                                    setSelectedVoiceLanguage(voice.lang);
+                                    setShowVoiceSelector(false);
+                                  }}
+                                  className={`mb-1 flex w-full items-center justify-between rounded-lg border px-3 py-2.5 text-left text-xs transition-colors ${
+                                    selectedVoice?.voiceURI === voice.voiceURI
+                                      ? "border-indigo-400/40 bg-indigo-500/10"
+                                      : "border-transparent hover:bg-indigo-500/10"
+                                  }`}
+                                >
+                                  <span>
+                                    <span className="block font-medium text-[var(--workbench-text)]">{voice.name}</span>
+                                    <span className="mt-1 block text-[10px] text-[var(--workbench-muted)]">{voice.lang}</span>
+                                  </span>
+                                  {selectedVoice?.voiceURI === voice.voiceURI && (
+                                    <FaCheck className="text-indigo-500" />
+                                  )}
+                                </button>
+                              ))}
+                            </div>
+                            <div className="border-t border-[var(--workbench-border)] p-2 text-center text-[10px] text-[var(--workbench-muted)]">
+                              {voicesForSelectedLanguage.length} voices available
+                            </div>
+                          </div>
+                        </>
+                      )}
+                    </div>
                     {isAiSpeaking && (
                       <button onClick={stopSpeaking} className="text-gray-400 hover:text-indigo-400" aria-label="Stop speech">
                         <FaStop size={10} />

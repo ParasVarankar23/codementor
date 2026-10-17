@@ -392,6 +392,7 @@ body {
 
   .workbench-secondary-tools {
     display: flex;
+    flex-wrap: wrap;
     justify-content: flex-end;
     gap: 4px;
     min-width: 0;
