@@ -317,6 +317,38 @@ const detectLanguageFromCode = (code) => {
   return 'javascript';
 };
 
+const LEARNING_MODE_LANGUAGES = [
+  { value: "html", label: "HTML" },
+  { value: "css", label: "CSS" },
+  { value: "javascript", label: "JavaScript" },
+  { value: "react", label: "React.js" },
+  { value: "python", label: "Python" },
+  { value: "node", label: "Node.js" },
+  { value: "java", label: "Java" },
+];
+
+const ROADMAP_EDITOR_LANGUAGES = {
+  "html+css": ["html", "css"],
+  html: ["html"],
+  css: ["css"],
+  javascript: ["javascript"],
+  reactjs: ["react"],
+  "react.js": ["react"],
+  nodejs: ["node"],
+  "node.js": ["node"],
+  python: ["python"],
+  java: ["java"],
+};
+
+const getRoadmapEditorLanguages = (technology) => {
+  const normalizedTechnology = String(technology || "")
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, "");
+
+  return ROADMAP_EDITOR_LANGUAGES[normalizedTechnology] || [];
+};
+
 /* ═══════════════════════════════════════════════════════════════════════════
    MAIN PAGE
 ═══════════════════════════════════════════════════════════════════════════ */
@@ -489,6 +521,12 @@ public class Main {
   const isNextSandpack = language === "next";
   const isRemote = ["python", "node", "java"].includes(language);
   const isClientSide = ["html", "css", "javascript"].includes(language);
+  const roadmapLanguages = practiceData
+    ? getRoadmapEditorLanguages(practiceData.language)
+    : [];
+  const languageOptions = roadmapLanguages.length
+    ? LEARNING_MODE_LANGUAGES.filter(({ value }) => roadmapLanguages.includes(value))
+    : LEARNING_MODE_LANGUAGES;
 
   /* ── Scroll Effect ── */
   useEffect(() => {
@@ -1984,15 +2022,13 @@ window.addEventListener('unhandledrejection',function(ev){window.parent.postMess
           <select
             value={language}
             onChange={(e) => handleLanguageChange(e.target.value)}
+            aria-label="Programming language"
+            title={practiceData ? "Language options are limited to this roadmap" : "Select a language"}
             className="h-9 px-3 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 bg-[var(--workbench-surface)] text-[var(--workbench-text)] border-[var(--workbench-border)]"
           >
-            <option value="html">HTML</option>
-            <option value="css">CSS</option>
-            <option value="javascript">JavaScript</option>
-            <option value="react">React.js</option>
-            <option value="python">Python</option>
-            <option value="node">Node.js</option>
-            <option value="java">Java</option>
+            {languageOptions.map(({ value, label }) => (
+              <option key={value} value={value}>{label}</option>
+            ))}
           </select>
 
           <button
@@ -2369,8 +2405,8 @@ window.addEventListener('unhandledrejection',function(ev){window.parent.postMess
             >
               {/* avatar */}
               <div
-                className="flex flex-col items-center justify-center p-6"
-                style={{ height: "30%", borderBottom: "1px solid var(--workbench-border)" }}
+                className="learning-mode-mentor-header flex flex-col items-center justify-center px-6 pt-8 pb-5"
+                style={{ flex: "0 0 32%", minHeight: 230, borderBottom: "1px solid var(--workbench-border)" }}
               >
                 <div className="relative mb-6">
                   <div className="w-24 h-24 rounded-full bg-indigo-500 p-[2px]">
@@ -2403,7 +2439,7 @@ window.addEventListener('unhandledrejection',function(ev){window.parent.postMess
               </div>
 
               {/* chat messages */}
-              <div className="flex flex-col" style={{ height: "70%" }}>
+              <div className="flex min-h-0 flex-1 flex-col">
                 <div className="flex-1 overflow-y-auto p-4 space-y-4">
                   {aiMessages.map((msg) => (
                     <div key={msg.id} className={`flex ${msg.type === "user" ? "justify-end" : "justify-start"}`}>

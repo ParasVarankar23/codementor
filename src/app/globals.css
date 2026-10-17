@@ -274,6 +274,11 @@ body {
     box-shadow: -16px 0 32px rgb(0 0 0 / 20%);
   }
 
+  .learning-mode-mentor-header {
+    flex-basis: 32% !important;
+    min-height: 220px !important;
+  }
+
   .learning-mode-terminal-panel {
     max-height: 45vh;
   }

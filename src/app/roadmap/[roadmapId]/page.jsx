@@ -91,7 +91,7 @@ export default function RoadmapOverviewPage() {
     return (
       <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: isDark ? '#0B0B0F' : '#f5f5f5' }}>
         <div className="text-center">
-          <div className="w-16 h-16 border-4 border-[#FF5A1F] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <div className="w-16 h-16 border-4 border-[#6366F1] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
           <p className="text-gray-500">Loading roadmap...</p>
         </div>
       </div>
@@ -105,7 +105,7 @@ export default function RoadmapOverviewPage() {
           <h1 className="text-2xl font-bold mb-4" style={{ color: isDark ? '#EDEDED' : '#1a1a1a' }}>Roadmap not found</h1>
           <button 
             onClick={() => router.push('/roadmap')}
-            className="px-6 py-3 bg-[#FF5A1F] text-white rounded-xl hover:bg-[#d93d0b] transition-all"
+            className="px-6 py-3 bg-[#6366F1] text-white rounded-xl hover:bg-[#4F46E5] transition-all"
           >
             Go Back to Dashboard
           </button>
@@ -140,7 +140,7 @@ export default function RoadmapOverviewPage() {
           <div className="flex items-center justify-between">
             <button 
               onClick={() => router.push('/roadmap')}
-              className="flex items-center gap-2 text-gray-500 hover:text-[#FF5A1F] transition-colors"
+              className="flex items-center gap-2 text-gray-500 hover:text-[#6366F1] transition-colors"
             >
               <FaArrowLeft />
               <span className="font-medium">Back to Dashboard</span>
@@ -148,7 +148,7 @@ export default function RoadmapOverviewPage() {
             
             <div className="flex items-center gap-4">
               <div className="text-sm text-gray-500">
-                Progress: <span className="font-bold text-[#FF5A1F]">{progress}%</span>
+                Progress: <span className="font-bold text-[#6366F1]">{progress}%</span>
               </div>
               {progress === 100 && (
                 <FaTrophy className="text-2xl text-yellow-500" />
@@ -161,20 +161,20 @@ export default function RoadmapOverviewPage() {
       {/* Hero Section */}
       <div className="relative overflow-hidden" style={{ backgroundColor: isDark ? '#1a1c22' : '#ffffff' }}>
         <div className="absolute inset-0 opacity-10">
-          <div className="absolute top-0 left-0 w-96 h-96 bg-[#FF5A1F] rounded-full filter blur-3xl"></div>
+          <div className="absolute top-0 left-0 w-96 h-96 bg-[#6366F1] rounded-full filter blur-3xl"></div>
           <div className="absolute bottom-0 right-0 w-96 h-96 bg-purple-500 rounded-full filter blur-3xl"></div>
         </div>
         
         <div className="relative max-w-6xl mx-auto px-4 py-12">
           <div className="flex items-start gap-6">
             <div className="flex-shrink-0">
-              <div className="w-24 h-24 rounded-3xl bg-gradient-to-br from-[#FF5A1F] to-[#d93d0b] flex items-center justify-center text-white text-5xl shadow-2xl">
+              <div className="w-24 h-24 rounded-3xl bg-gradient-to-br from-[#6366F1] to-[#4F46E5] flex items-center justify-center text-white text-5xl shadow-2xl">
                 {techEmojis[technology] || '💻'}
               </div>
             </div>
             
             <div className="flex-1">
-              <div className="text-sm font-semibold text-[#FF5A1F] mb-2 uppercase">
+              <div className="text-sm font-semibold text-[#6366F1] mb-2 uppercase">
                 {roadmapData.proficiency} • {roadmapData.persona}
               </div>
               <h1 className="text-5xl font-bold mb-4 capitalize" style={{ color: isDark ? '#EDEDED' : '#1a1a1a' }}>
@@ -188,11 +188,11 @@ export default function RoadmapOverviewPage() {
               <div className="mb-6">
                 <div className="flex justify-between text-sm mb-2">
                   <span className="text-gray-500">Overall Progress</span>
-                  <span className="font-bold text-[#FF5A1F]">{progress}%</span>
+                  <span className="font-bold text-[#6366F1]">{progress}%</span>
                 </div>
                 <div className="w-full h-3 bg-gray-700 rounded-full overflow-hidden">
                   <div
-                    className="h-full bg-gradient-to-r from-[#FF5A1F] to-[#d93d0b] transition-all duration-500"
+                    className="h-full bg-gradient-to-r from-[#6366F1] to-[#4F46E5] transition-all duration-500"
                     style={{ width: `${progress}%` }}
                   />
                 </div>
@@ -200,13 +200,13 @@ export default function RoadmapOverviewPage() {
               
               <div className="flex flex-wrap gap-4">
                 <div className="flex items-center gap-2 px-4 py-2 rounded-xl" style={{ backgroundColor: isDark ? '#0B0B0F' : '#f5f5f5' }}>
-                  <FaCalendar className="text-[#FF5A1F]" />
+                  <FaCalendar className="text-[#6366F1]" />
                   <span className="text-sm font-medium" style={{ color: isDark ? '#EDEDED' : '#1a1a1a' }}>
                     {timeline}
                   </span>
                 </div>
                 <div className="flex items-center gap-2 px-4 py-2 rounded-xl" style={{ backgroundColor: isDark ? '#0B0B0F' : '#f5f5f5' }}>
-                  <FaFire className="text-orange-500" />
+                  <FaFire className="text-[#A78BFA]" />
                   <span className="text-sm font-medium" style={{ color: isDark ? '#EDEDED' : '#1a1a1a' }}>
                     {roadmapData.dailyHours}/day
                   </span>
@@ -254,7 +254,7 @@ export default function RoadmapOverviewPage() {
                 }`}
                 style={{
                   backgroundColor: isDark ? '#1a1c22' : '#ffffff',
-                  borderColor: isCompleted ? '#10b981' : isCurrent ? '#FF5A1F' : isLocked ? '#2a2c32' : '#2a2c32'
+                  borderColor: isCompleted ? '#10b981' : isCurrent ? '#6366F1' : isLocked ? '#2a2c32' : '#2a2c32'
                 }}
               >
                 {/* Status Badge */}
@@ -264,7 +264,7 @@ export default function RoadmapOverviewPage() {
                       <FaCheckCircle className="text-white text-xl" />
                     </div>
                   ) : isCurrent ? (
-                    <div className="w-12 h-12 rounded-full bg-[#FF5A1F] flex items-center justify-center shadow-lg animate-pulse">
+                    <div className="w-12 h-12 rounded-full bg-[#6366F1] flex items-center justify-center shadow-lg animate-pulse">
                       <FaPlay className="text-white text-sm" />
                     </div>
                   ) : isLocked ? (
@@ -277,7 +277,7 @@ export default function RoadmapOverviewPage() {
                 {/* Week Number */}
                 <div className={`w-16 h-16 rounded-2xl flex items-center justify-center text-white text-2xl font-bold mb-4 ${
                   isCompleted ? 'bg-gradient-to-br from-green-500 to-green-600' :
-                  isCurrent ? 'bg-gradient-to-br from-[#FF5A1F] to-[#d93d0b]' :
+                  isCurrent ? 'bg-gradient-to-br from-[#6366F1] to-[#4F46E5]' :
                   isLocked ? 'bg-gradient-to-br from-gray-600 to-gray-700' :
                   'bg-gradient-to-br from-blue-500 to-blue-600'
                 }`}>
@@ -297,7 +297,7 @@ export default function RoadmapOverviewPage() {
                 {/* Week Stats */}
                 <div className="flex items-center justify-between text-sm">
                   <div className="flex items-center gap-2 text-gray-500">
-                    <FaClock className="text-[#FF5A1F]" />
+                    <FaClock className="text-[#6366F1]" />
                     <span>{week.estimatedHours}</span>
                   </div>
                   <div className="flex items-center gap-2 text-gray-500">
@@ -308,8 +308,8 @@ export default function RoadmapOverviewPage() {
 
                 {/* Hover Effect */}
                 {isHovered && !isLocked && (
-                  <div className="absolute inset-0 rounded-2xl bg-gray-900/50 backdrop-blur-sm border-2 border-[#FF5A1F] flex items-center justify-center">
-                    <div className="text-[#FF5A1F] font-bold text-lg">
+                  <div className="absolute inset-0 rounded-2xl bg-gray-900/50 backdrop-blur-sm border-2 border-[#6366F1] flex items-center justify-center">
+                    <div className="text-[#818CF8] font-bold text-lg">
                       {isCompleted ? 'Review Week' : isCurrent ? 'Continue Learning' : 'Start Week'}
                     </div>
                   </div>
@@ -342,7 +342,7 @@ export default function RoadmapOverviewPage() {
             <div className="flex gap-4 justify-center">
               <button
                 onClick={() => router.push('/roadmap')}
-                className="px-6 py-3 bg-gradient-to-r from-[#FF5A1F] to-[#d93d0b] text-white font-bold rounded-xl hover:shadow-lg transition-all"
+                className="px-6 py-3 bg-gradient-to-r from-[#6366F1] to-[#4F46E5] text-white font-bold rounded-xl hover:shadow-lg transition-all"
               >
                 Start New Roadmap
               </button>

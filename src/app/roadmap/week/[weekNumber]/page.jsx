@@ -201,7 +201,7 @@ export default function WeekDetailPage() {
     return (
       <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: isDark ? '#0B0B0F' : '#f5f5f5' }}>
         <div className="text-center">
-          <div className="w-16 h-16 border-4 border-[#FF5A1F] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <div className="w-16 h-16 border-4 border-[#6366F1] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
           <p className="text-gray-500">Loading week details...</p>
         </div>
       </div>
@@ -215,7 +215,7 @@ export default function WeekDetailPage() {
           <h1 className="text-2xl font-bold mb-4" style={{ color: isDark ? '#EDEDED' : '#1a1a1a' }}>Week not found</h1>
           <button 
             onClick={() => router.push('/roadmap')}
-            className="px-6 py-3 bg-[#FF5A1F] text-white rounded-xl hover:bg-[#d93d0b] transition-all"
+            className="px-6 py-3 bg-[#6366F1] text-white rounded-xl hover:bg-[#4F46E5] transition-all"
           >
             Go Back to Roadmap
           </button>
@@ -237,7 +237,7 @@ export default function WeekDetailPage() {
           <div className="flex items-center justify-between">
             <button 
               onClick={() => router.push('/roadmap')}
-              className="flex items-center gap-2 text-gray-500 hover:text-[#FF5A1F] transition-colors"
+              className="flex items-center gap-2 text-gray-500 hover:text-[#6366F1] transition-colors"
             >
               <FaArrowLeft />
               <span className="font-medium">Back to Roadmap</span>
@@ -256,20 +256,20 @@ export default function WeekDetailPage() {
       {/* Hero Section */}
       <div className="relative overflow-hidden" style={{ backgroundColor: isDark ? '#1a1c22' : '#ffffff' }}>
         <div className="absolute inset-0 opacity-10">
-          <div className="absolute top-0 left-0 w-96 h-96 bg-[#FF5A1F] rounded-full filter blur-3xl"></div>
+          <div className="absolute top-0 left-0 w-96 h-96 bg-[#6366F1] rounded-full filter blur-3xl"></div>
           <div className="absolute bottom-0 right-0 w-96 h-96 bg-purple-500 rounded-full filter blur-3xl"></div>
         </div>
         
         <div className="relative max-w-5xl mx-auto px-4 py-12">
           <div className="flex items-start gap-6">
             <div className="flex-shrink-0">
-              <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-[#FF5A1F] to-[#d93d0b] flex items-center justify-center text-white text-3xl font-bold shadow-2xl">
+              <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-[#6366F1] to-[#4F46E5] flex items-center justify-center text-white text-3xl font-bold shadow-2xl">
                 {weekData.week}
               </div>
             </div>
             
             <div className="flex-1">
-              <div className="text-sm font-semibold text-[#FF5A1F] mb-2">WEEK {weekData.week}</div>
+              <div className="text-sm font-semibold text-[#6366F1] mb-2">WEEK {weekData.week}</div>
               <h1 className="text-4xl font-bold mb-4" style={{ color: isDark ? '#EDEDED' : '#1a1a1a' }}>
                 {weekData.title}
               </h1>
@@ -279,7 +279,7 @@ export default function WeekDetailPage() {
               
               <div className="flex flex-wrap gap-4">
                 <div className="flex items-center gap-2 px-4 py-2 rounded-xl" style={{ backgroundColor: isDark ? '#0B0B0F' : '#f5f5f5' }}>
-                  <FaClock className="text-[#FF5A1F]" />
+                  <FaClock className="text-[#6366F1]" />
                   <span className="text-sm font-medium" style={{ color: isDark ? '#EDEDED' : '#1a1a1a' }}>
                     {weekData.estimatedHours}
                   </span>
@@ -291,7 +291,7 @@ export default function WeekDetailPage() {
                   </span>
                 </div>
                 <div className="flex items-center gap-2 px-4 py-2 rounded-xl" style={{ backgroundColor: isDark ? '#0B0B0F' : '#f5f5f5' }}>
-                  <FaFire className="text-orange-500" />
+                  <FaFire className="text-[#A78BFA]" />
                   <span className="text-sm font-medium" style={{ color: isDark ? '#EDEDED' : '#1a1a1a' }}>
                     {roadmapData.userData.dailyHours}/day
                   </span>
@@ -320,7 +320,7 @@ export default function WeekDetailPage() {
                   className="rounded-2xl overflow-hidden border transition-all duration-300"
                   style={{ 
                     backgroundColor: isDark ? '#1a1c22' : '#ffffff',
-                    borderColor: isExpanded ? '#FF5A1F' : (isDark ? '#2a2c32' : '#e5e7eb')
+                    borderColor: isExpanded ? '#6366F1' : (isDark ? '#2a2c32' : '#e5e7eb')
                   }}
                 >
                   {/* Day Header */}
@@ -332,7 +332,7 @@ export default function WeekDetailPage() {
                       <div className={`w-12 h-12 rounded-xl flex items-center justify-center font-bold text-white ${
                         day.isRestDay 
                           ? 'bg-gradient-to-br from-blue-500 to-blue-600' 
-                          : 'bg-gradient-to-br from-[#FF5A1F] to-[#d93d0b]'
+                          : 'bg-gradient-to-br from-[#6366F1] to-[#4F46E5]'
                       }`}>
                         {day.day}
                       </div>
@@ -393,8 +393,8 @@ export default function WeekDetailPage() {
                                     className="w-full p-4 flex items-center justify-between hover:bg-opacity-50 transition-all"
                                   >
                                     <div className="flex items-center gap-3">
-                                      <div className="w-8 h-8 rounded-lg bg-[#FF5A1F]/20 flex items-center justify-center">
-                                        <FaCode className="text-[#FF5A1F] text-sm" />
+                                      <div className="w-8 h-8 rounded-lg bg-[#6366F1]/20 flex items-center justify-center">
+                                        <FaCode className="text-[#6366F1] text-sm" />
                                       </div>
                                       <span className="font-semibold text-left" style={{ color: isDark ? '#EDEDED' : '#1a1a1a' }}>
                                         {topic.name}
@@ -461,7 +461,7 @@ export default function WeekDetailPage() {
                                           localStorage.setItem('practiceCode', JSON.stringify(practiceData));
                                           router.push('/learning-mode');
                                         }}
-                                        className="w-full mt-2 px-4 py-3 bg-gradient-to-r from-[#FF5A1F] to-[#d93d0b] text-white rounded-xl font-bold hover:shadow-lg transition-all flex items-center justify-center gap-2"
+                                        className="w-full mt-2 px-4 py-3 bg-gradient-to-r from-[#6366F1] to-[#4F46E5] text-white rounded-xl font-bold hover:shadow-lg transition-all flex items-center justify-center gap-2"
                                       >
                                         <FaPlay />
                                         Practice in Code Editor
@@ -480,8 +480,8 @@ export default function WeekDetailPage() {
                                     borderColor: isDark ? '#2a2c32' : '#e5e7eb'
                                   }}
                                 >
-                                  <div className="w-8 h-8 rounded-lg bg-[#FF5A1F]/20 flex items-center justify-center">
-                                    <FaBook className="text-[#FF5A1F] text-sm" />
+                                  <div className="w-8 h-8 rounded-lg bg-[#6366F1]/20 flex items-center justify-center">
+                                    <FaBook className="text-[#6366F1] text-sm" />
                                   </div>
                                   <span className="font-medium" style={{ color: isDark ? '#EDEDED' : '#1a1a1a' }}>
                                     {topic}
@@ -514,7 +514,7 @@ export default function WeekDetailPage() {
             <button
               onClick={handleCompleteWeek}
               disabled={isCompletingWeek}
-              className="px-8 py-4 bg-gradient-to-r from-[#FF5A1F] to-[#d93d0b] text-white font-bold rounded-2xl hover:shadow-2xl hover:scale-105 transition-all flex items-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+              className="px-8 py-4 bg-gradient-to-r from-[#6366F1] to-[#4F46E5] text-white font-bold rounded-2xl hover:shadow-2xl hover:scale-105 transition-all flex items-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
             >
               {isCompletingWeek ? (
                 <>

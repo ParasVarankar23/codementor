@@ -13,7 +13,7 @@ import {
 } from "@codesandbox/sandpack-react";
 import { default as Image, default as NextImage } from "next/image";
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
     FaCheck,
     FaComments,
@@ -28,6 +28,7 @@ import {
     FaPaperPlane,
     FaRobot,
     FaSignInAlt,
+    FaSignOutAlt,
     FaSpinner,
     FaStop,
     FaSun,
@@ -343,7 +344,15 @@ export default function Home() {
     // Voice selection state
     const [availableVoices, setAvailableVoices] = useState([]);
     const [selectedVoice, setSelectedVoice] = useState(null);
+    const [selectedVoiceLanguage, setSelectedVoiceLanguage] = useState("all");
     const [showVoiceSelector, setShowVoiceSelector] = useState(false);
+    const [isVoiceListLoading, setIsVoiceListLoading] = useState(true);
+    const speechLanguageNames = useMemo(
+        () => typeof Intl.DisplayNames === "function"
+            ? new Intl.DisplayNames(["en"], { type: "language" })
+            : null,
+        []
+    );
 
     const [showLoginModal, setShowLoginModal] = useState(false);
     const [hasShownWelcomeModal, setHasShownWelcomeModal] = useState(false);
@@ -467,6 +476,17 @@ public class Main {
     const [speechSynth, setSpeechSynth] = useState(null);
     const [isListening, setIsListening] = useState(false);
     const [recognition, setRecognition] = useState(null);
+    const speechLanguages = useMemo(
+        () => [...new Set(availableVoices.map(({ lang }) => lang).filter(Boolean))]
+            .sort((a, b) => a.localeCompare(b)),
+        [availableVoices]
+    );
+    const voicesForSelectedLanguage = useMemo(
+        () => selectedVoiceLanguage === "all"
+            ? availableVoices
+            : availableVoices.filter(({ lang }) => lang === selectedVoiceLanguage),
+        [availableVoices, selectedVoiceLanguage]
+    );
 
     const messagesEndRef = useRef(null);
     const fullscreenRef = useRef(null);
@@ -561,25 +581,7 @@ public class Main {
     /* ── speech ── */
     useEffect(() => {
         if (typeof window !== "undefined") {
-            // Initialize speech synthesis
-            const synth = window.speechSynthesis;
-            setSpeechSynth(synth);
-
-            // Pre-load voices
-            if (synth) {
-                // Chrome needs this to load voices
-                synth.getVoices();
-
-                // For browsers that need time to load voices
-                const loadVoices = () => {
-                    synth.getVoices();
-                };
-
-                if (synth.onvoiceschanged !== undefined) {
-                    synth.onvoiceschanged = loadVoices;
-                }
-            }
-
+            setSpeechSynth(window.speechSynthesis || null);
             console.log("🎤 Speech synthesis initialized");
         }
     }, []);
@@ -637,61 +639,72 @@ public class Main {
 
     // Load available voices when speech synthesis is ready
     useEffect(() => {
-        if (speechSynth) {
-            const loadVoices = () => {
-                const voices = speechSynth.getVoices();
+        if (!speechSynth) {
+            setIsVoiceListLoading(false);
+            return;
+        }
 
-                // Filter and sort voices (prefer female voices but show all)
-                const voiceList = voices.map(voice => ({
-                    name: voice.name,
-                    lang: voice.lang,
-                    voiceURI: voice.voiceURI,
-                    default: voice.default,
-                    voice: voice // store the actual voice object
-                }));
+        let isActive = true;
+        const loadVoices = () => {
+            const voices = speechSynth.getVoices();
 
-                // Sort: female voices first, then by name
-                voiceList.sort((a, b) => {
-                    const aIsFemale = a.name.toLowerCase().includes('female') ||
-                        a.name.includes('Samantha') ||
-                        a.name.includes('Google UK') ||
-                        a.name.includes('Zira') ||
-                        a.name.includes('Hazel');
-                    const bIsFemale = b.name.toLowerCase().includes('female') ||
-                        b.name.includes('Samantha') ||
-                        b.name.includes('Google UK') ||
-                        b.name.includes('Zira') ||
-                        b.name.includes('Hazel');
+            const voiceList = voices.map(voice => ({
+                name: voice.name,
+                lang: voice.lang,
+                voiceURI: voice.voiceURI,
+                default: voice.default,
+                voice
+            }));
 
-                    if (aIsFemale && !bIsFemale) return -1;
-                    if (!aIsFemale && bIsFemale) return 1;
-                    return a.name.localeCompare(b.name);
-                });
+            voiceList.sort((a, b) => {
+                const aIsFemale = a.name.toLowerCase().includes('female') ||
+                    a.name.includes('Samantha') ||
+                    a.name.includes('Google UK') ||
+                    a.name.includes('Zira') ||
+                    a.name.includes('Hazel');
+                const bIsFemale = b.name.toLowerCase().includes('female') ||
+                    b.name.includes('Samantha') ||
+                    b.name.includes('Google UK') ||
+                    b.name.includes('Zira') ||
+                    b.name.includes('Hazel');
 
-                setAvailableVoices(voiceList);
+                if (aIsFemale && !bIsFemale) return -1;
+                if (!aIsFemale && bIsFemale) return 1;
+                return a.name.localeCompare(b.name);
+            });
 
-                // Set default voice (try to find a female voice first)
-                const defaultVoice = voiceList.find(v =>
+            if (!isActive) return;
+
+            setAvailableVoices(voiceList);
+            setIsVoiceListLoading(false);
+
+            setSelectedVoice((currentVoice) => {
+                const stillAvailable = voiceList.find(
+                    ({ voiceURI }) => voiceURI === currentVoice?.voiceURI
+                );
+                return stillAvailable || voiceList.find(v =>
                     v.name.includes('Google UK') ||
                     v.name.includes('Samantha') ||
                     v.name.includes('Female') ||
                     v.name.includes('Zira') ||
                     v.name.includes('Hazel')
                 ) || voiceList[0] || null;
+            });
 
-                setSelectedVoice(defaultVoice);
+            console.log("🎤 Available voices loaded:", voiceList.length);
+        };
 
-                console.log("🎤 Available voices loaded:", voiceList.length);
-            };
+        const loadingFallback = window.setTimeout(() => {
+            if (isActive) setIsVoiceListLoading(false);
+        }, 1500);
+        speechSynth.addEventListener("voiceschanged", loadVoices);
+        loadVoices();
 
-            // Chrome loads voices asynchronously
-            if (speechSynth.onvoiceschanged !== undefined) {
-                speechSynth.onvoiceschanged = loadVoices;
-            }
-
-            // Load immediately in case voices are already loaded
-            loadVoices();
-        }
+        return () => {
+            isActive = false;
+            window.clearTimeout(loadingFallback);
+            speechSynth.removeEventListener("voiceschanged", loadVoices);
+        };
     }, [speechSynth]);
 
 
@@ -972,6 +985,7 @@ public class Main {
                     // Use selected voice or default
                     if (selectedVoice && selectedVoice.voice) {
                         utterance.voice = selectedVoice.voice;
+                        utterance.lang = selectedVoice.lang;
                     }
 
                     // Natural speaking settings
@@ -1835,6 +1849,37 @@ window.addEventListener('unhandledrejection',function(ev){window.parent.postMess
                         <FaHistory />
                     </button>
 
+                    <label className="sr-only" htmlFor="toolbar-speech-language">
+                        Speech language
+                    </label>
+                    <select
+                        id="toolbar-speech-language"
+                        value={selectedVoiceLanguage}
+                        onChange={(event) => {
+                            const selectedLanguage = event.target.value;
+                            setSelectedVoiceLanguage(selectedLanguage);
+                            if (selectedLanguage !== "all") {
+                                const languageVoice = availableVoices.find((voice) => voice.lang === selectedLanguage);
+                                if (languageVoice) setSelectedVoice(languageVoice);
+                            }
+                        }}
+                        aria-label="Select speech language"
+                        title="Select speech language"
+                        className="h-9 max-w-[112px] sm:max-w-[150px] rounded-lg border border-[var(--workbench-border)] bg-[var(--workbench-editor)] px-2 text-xs text-[var(--workbench-text)] focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                    >
+                        <option value="all">Speech: All</option>
+                        {speechLanguages.map((speechLanguage) => {
+                            const languageName = speechLanguageNames?.of(speechLanguage);
+                            return (
+                                <option key={speechLanguage} value={speechLanguage}>
+                                    {languageName && languageName !== speechLanguage
+                                        ? `${languageName} (${speechLanguage})`
+                                        : speechLanguage}
+                                </option>
+                            );
+                        })}
+                    </select>
+
                     {[
                         { icon: isDark ? <FaSun className="text-lg" /> : <FaMoon className="text-lg" />, action: () => setTheme(isDark ? "light" : "dark"), title: "Toggle theme" },
                         { icon: <FaComments className="text-lg" />, action: () => setIsRightPanelOpen((p) => !p), title: "Toggle AI panel" },
@@ -1857,6 +1902,9 @@ window.addEventListener('unhandledrejection',function(ev){window.parent.postMess
                         <div className="relative">
                             <button
                                 onClick={() => setShowDropdown(!showDropdown)}
+                                aria-label="Open account menu"
+                                aria-expanded={showDropdown}
+                                aria-haspopup="menu"
                                 className="flex items-center justify-center w-9 h-9 rounded-lg hover:bg-[#FF5A1F]/10 transition-all duration-300 cursor-pointer border border-[#2a2e3a]"
                             >
                                 {user.photoURL ? (
@@ -1865,10 +1913,10 @@ window.addEventListener('unhandledrejection',function(ev){window.parent.postMess
                                         alt={user.displayName || "User"}
                                         width={32}
                                         height={32}
-                                        className="rounded-full border-2 border-[#FF5A1F]/30"
+                                        className="rounded-full border-2 border-indigo-400/40"
                                     />
                                 ) : (
-                                    <div className="w-8 h-8 rounded-full bg-gradient-to-r from-[#FF5A1F] to-[#d93d0b] flex items-center justify-center text-white text-sm font-semibold">
+                                    <div className="w-8 h-8 rounded-full bg-gradient-to-r from-indigo-500 to-indigo-700 flex items-center justify-center text-white text-sm font-semibold">
                                         {getUserInitials()}
                                     </div>
                                 )}
@@ -1881,16 +1929,20 @@ window.addEventListener('unhandledrejection',function(ev){window.parent.postMess
                                         className="fixed inset-0 z-40"
                                         onClick={() => setShowDropdown(false)}
                                     />
-                                    <div className="absolute right-0 mt-2 w-48 bg-[#1a1c22] border border-[#2a2e3a] rounded-xl shadow-2xl z-50 overflow-hidden">
-                                        <div className="p-3 border-b border-[#2a2e3a]">
-                                            <p className="text-xs text-gray-400">Signed in as</p>
-                                            <p className="text-sm text-white truncate">{user.email}</p>
+                                    <div
+                                        role="menu"
+                                        className="absolute right-0 mt-2 w-64 max-w-[calc(100vw-1.5rem)] rounded-xl border border-[var(--workbench-border)] bg-[var(--workbench-surface)] shadow-2xl z-50 overflow-hidden"
+                                    >
+                                        <div className="p-3 border-b border-[var(--workbench-border)]">
+                                            <p className="text-xs text-[var(--workbench-muted)]">Signed in as</p>
+                                            <p className="text-sm text-[var(--workbench-text)] truncate">{user.email || user.displayName || "Account"}</p>
                                         </div>
                                         <button
                                             onClick={handleLogout}
-                                            className="w-full px-4 py-3 text-left text-sm text-gray-300 hover:text-[#FF5A1F] hover:bg-[#FF5A1F]/10 transition-colors flex items-center gap-2 cursor-pointer"
+                                            role="menuitem"
+                                            className="w-full px-4 py-3 text-left text-sm text-[var(--workbench-text)] hover:text-indigo-500 hover:bg-indigo-500/10 transition-colors flex items-center gap-2 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-indigo-400"
                                         >
-                                            <FaSignInAlt className="text-[#FF5A1F]" />
+                                            <FaSignOutAlt className="text-indigo-500" />
                                             Sign Out
                                         </button>
                                     </div>
@@ -2142,16 +2194,17 @@ window.addEventListener('unhandledrejection',function(ev){window.parent.postMess
                                         <span className={`w-2 h-2 rounded-full bg-indigo-500 ${isAiSpeaking ? "animate-pulse" : ""}`} />
 
                                         {/* Voice Selector Button - Moved here */}
-                                        {availableVoices.length > 0 && (
-                                            <div className="relative ml-2">
+                                        <div className="relative ml-2">
                                                 <button
                                                     onClick={() => setShowVoiceSelector(!showVoiceSelector)}
-                                                    className="flex items-center gap-1 px-2 py-1 rounded-full bg-[#2a2e3a] hover:bg-[#3a3e4a] text-gray-300 text-[10px] transition-all border border-[#3a3e4a]"
-                                                    title="Select voice"
+                                                    className="flex items-center gap-1 px-2 py-1 rounded-full bg-[var(--workbench-panel)] hover:bg-indigo-500/10 text-[var(--workbench-text)] text-[10px] transition-colors border border-[var(--workbench-border)]"
+                                                    title="Choose speech language and voice"
+                                                    aria-label="Choose speech language and voice"
+                                                    aria-expanded={showVoiceSelector}
                                                 >
                                                     <span>🎤</span>
                                                     <span className="max-w-[80px] truncate">
-                                                        {selectedVoice?.name?.split(' ').slice(0, 2).join(' ') || 'Voice'}
+                                                        {selectedVoice?.lang || (isVoiceListLoading ? "Loading…" : "No voices")}
                                                     </span>
                                                     <span>▼</span>
                                                 </button>
@@ -2163,13 +2216,44 @@ window.addEventListener('unhandledrejection',function(ev){window.parent.postMess
                                                             className="fixed inset-0 z-40"
                                                             onClick={() => setShowVoiceSelector(false)}
                                                         />
-                                                        <div className="absolute top-full mt-2 left-1/2 transform -translate-x-1/2 w-72 max-h-60 overflow-y-auto bg-[#1a1c22] border border-[#2a2e3a] rounded-lg shadow-2xl z-50">
-                                                            <div className="p-3 border-b border-[#2a2e3a] sticky top-0 bg-[#1a1c22]">
-                                                                <p className="text-xs font-semibold text-gray-300">Select Voice</p>
-                                                                <p className="text-[9px] text-gray-500 mt-1">Choose how your AI Mentor sounds</p>
+                                                        <div className="absolute top-full mt-2 left-1/2 transform -translate-x-1/2 w-72 max-h-80 overflow-y-auto bg-[var(--workbench-surface)] border border-[var(--workbench-border)] rounded-lg shadow-xl z-50">
+                                                            <div className="p-3 border-b border-[var(--workbench-border)] sticky top-0 bg-[var(--workbench-surface)]">
+                                                                <p className="text-xs font-semibold text-[var(--workbench-text)]">Speech language</p>
+                                                                <p className="text-[9px] text-[var(--workbench-muted)] mt-1">Choose a language and available voice</p>
+                                                                <select
+                                                                    value={selectedVoiceLanguage}
+                                                                    onChange={(event) => {
+                                                                        const language = event.target.value;
+                                                                        setSelectedVoiceLanguage(language);
+                                                                        if (language !== "all") {
+                                                                            const languageVoice = availableVoices.find((voice) => voice.lang === language);
+                                                                            if (languageVoice) setSelectedVoice(languageVoice);
+                                                                        }
+                                                                    }}
+                                                                    aria-label="Filter speech voices by language"
+                                                                    className="mt-2 w-full rounded-md border border-[var(--workbench-border)] bg-[var(--workbench-panel)] px-2 py-1.5 text-xs text-[var(--workbench-text)] focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                                                                >
+                                                                    <option value="all">All available languages</option>
+                                                                    {speechLanguages.map((language) => {
+                                                                        const languageName = speechLanguageNames?.of(language);
+                                                                        return (
+                                                                            <option key={language} value={language}>
+                                                                                {languageName && languageName !== language
+                                                                                    ? `${languageName} (${language})`
+                                                                                    : language}
+                                                                            </option>
+                                                                        );
+                                                                    })}
+                                                                </select>
                                                             </div>
                                                             <div className="p-2">
-                                                                {availableVoices.map((voice, index) => {
+                                                                {voicesForSelectedLanguage.length === 0 ? (
+                                                                    <p className="px-3 py-3 text-center text-xs text-[var(--workbench-muted)]">
+                                                                        {isVoiceListLoading
+                                                                            ? "Loading speech voices…"
+                                                                            : "No speech voices are available in this browser. Install a speech voice in your system settings, then reload this page."}
+                                                                    </p>
+                                                                ) : voicesForSelectedLanguage.map((voice) => {
                                                                     // Check if it's a female voice for visual indicator
                                                                     const isFemaleVoice = voice.name.toLowerCase().includes('female') ||
                                                                         voice.name.includes('Samantha') ||
@@ -2187,22 +2271,36 @@ window.addEventListener('unhandledrejection',function(ev){window.parent.postMess
 
                                                                     return (
                                                                         <button
-                                                                            key={index}
+                                                                            key={voice.voiceURI}
                                                                             onClick={() => {
                                                                                 setSelectedVoice(voice);
+                                                                                setSelectedVoiceLanguage(voice.lang);
                                                                                 setShowVoiceSelector(false);
-                                                                                // Test the voice with a friendly message
-                                                                                const testUtterance = new SpeechSynthesisUtterance("Hello! I'm your AI coding mentor. How can I help you today?");
+                                                                                const previewMessages = {
+                                                                                    en: "Hello! I'm your AI coding mentor. How can I help you today?",
+                                                                                    es: "¡Hola! Soy tu mentor de programación con IA. ¿Cómo puedo ayudarte?",
+                                                                                    fr: "Bonjour ! Je suis votre mentor de programmation IA. Comment puis-je vous aider ?",
+                                                                                    de: "Hallo! Ich bin dein KI-Coding-Mentor. Wie kann ich dir helfen?",
+                                                                                    hi: "नमस्ते! मैं आपका AI कोडिंग मेंटर हूँ। मैं आपकी कैसे मदद कर सकता हूँ?",
+                                                                                    it: "Ciao! Sono il tuo mentore di programmazione AI. Come posso aiutarti?",
+                                                                                    ja: "こんにちは。AIコーディングメンターです。どのようにお手伝いできますか？",
+                                                                                    pt: "Olá! Sou seu mentor de programação com IA. Como posso ajudar?",
+                                                                                    zh: "你好，我是你的 AI 编程导师。有什么可以帮你？",
+                                                                                };
+                                                                                const previewMessage = previewMessages[voice.lang.split("-")[0]] ||
+                                                                                    "Hello! I'm your AI coding mentor. How can I help you today?";
+                                                                                const testUtterance = new SpeechSynthesisUtterance(previewMessage);
                                                                                 testUtterance.voice = voice.voice;
+                                                                                testUtterance.lang = voice.lang;
                                                                                 testUtterance.rate = 0.85;
                                                                                 if (speechSynth) {
                                                                                     speechSynth.cancel();
                                                                                     speechSynth.speak(testUtterance);
                                                                                 }
                                                                             }}
-                                                                            className={`w-full text-left px-3 py-2.5 rounded-lg text-xs transition-all mb-1 ${selectedVoice?.name === voice.name
-                                                                                ? 'bg-gradient-to-r from-[#FF5A1F]/20 to-[#FF5A1F]/10 border border-[#FF5A1F]/30'
-                                                                                : 'hover:bg-[#2a2e3a] border border-transparent'
+                                                                            className={`w-full text-left px-3 py-2.5 rounded-lg text-xs transition-colors mb-1 ${selectedVoice?.voiceURI === voice.voiceURI
+                                                                                ? 'bg-indigo-500/10 border border-indigo-400/40'
+                                                                                : 'hover:bg-indigo-500/10 border border-transparent'
                                                                                 }`}
                                                                         >
                                                                             <div className="flex items-center justify-between">
@@ -2212,8 +2310,8 @@ window.addEventListener('unhandledrejection',function(ev){window.parent.postMess
                                                                                         <span className="text-[10px] text-pink-400" title="Female voice">♀️</span>
                                                                                     )}
                                                                                 </div>
-                                                                                {selectedVoice?.name === voice.name && (
-                                                                                    <FaCheck className="text-[#FF5A1F] text-[10px]" />
+                                                                                {selectedVoice?.voiceURI === voice.voiceURI && (
+                                                                                    <FaCheck className="text-indigo-400 text-[10px]" />
                                                                                 )}
                                                                             </div>
                                                                             <div className="flex items-center justify-between mt-1">
@@ -2226,14 +2324,13 @@ window.addEventListener('unhandledrejection',function(ev){window.parent.postMess
                                                                     );
                                                                 })}
                                                             </div>
-                                                            <div className="p-2 border-t border-[#2a2e3a] text-[8px] text-gray-600 text-center">
-                                                                {availableVoices.length} voices available
+                                                            <div className="p-2 border-t border-[var(--workbench-border)] text-[9px] text-[var(--workbench-muted)] text-center">
+                                                                {voicesForSelectedLanguage.length} voices available
                                                             </div>
                                                         </div>
                                                     </>
                                                 )}
-                                            </div>
-                                        )}
+                                        </div>
 
                                         {/* Stop Speech Button */}
                                         {isSpeaking && (
