@@ -455,6 +455,8 @@ public class Main {
     // iframe (HTML/CSS/JS)
     const [srcDoc, setSrcDoc] = useState("");
     const [runKey, setRunKey] = useState(0);
+    const activeRunKeyRef = useRef(0);
+    const seenIframeMessagesRef = useRef(new Set());
 
     // panels
     const [activeTab, setActiveTab] = useState("output");
@@ -1527,7 +1529,14 @@ public class Main {
     /* ── iframe console interception ── */
     useEffect(() => {
         const handler = (e) => {
-            if (!e.data?.type) return;
+            if (
+                !e.data?.type ||
+                e.data.runId !== activeRunKeyRef.current ||
+                !Number.isInteger(e.data.messageId) ||
+                seenIframeMessagesRef.current.has(e.data.messageId)
+            ) return;
+
+            seenIframeMessagesRef.current.add(e.data.messageId);
             if (e.data.type === "log" || e.data.type === "warn")
                 setTerminalLines((p) => [...p, { type: "output", text: e.data.message }]);
             if (e.data.type === "error")
@@ -1538,15 +1547,17 @@ public class Main {
     }, []);
 
     /* ── build srcDoc for HTML / CSS / JS ── */
-    const buildSrcDoc = (c, lang) => {
+    const buildSrcDoc = (c, lang, runId) => {
         const intercept = `<script>(function(){
-function _s(t,a){var x=Array.from(a).map(function(v){return typeof v==='object'?JSON.stringify(v,null,2):String(v);}).join(' ');window.parent.postMessage({type:t,message:x},'*');}
+var _run=${runId},_seq=0;
+function _post(t,m){window.parent.postMessage({type:t,message:m,runId:_run,messageId:++_seq},'*');}
+function _s(t,a){var x=Array.from(a).map(function(v){return typeof v==='object'?JSON.stringify(v,null,2):String(v);}).join(' ');_post(t,x);}
 var _l=console.log.bind(console),_e=console.error.bind(console),_w=console.warn.bind(console);
 console.log=function(){_s('log',arguments);_l.apply(console,arguments);};
 console.error=function(){_s('error',arguments);_e.apply(console,arguments);};
 console.warn=function(){_s('warn',arguments);_w.apply(console,arguments);};
-window.onerror=function(m,_,ln,_c,err){window.parent.postMessage({type:'error',message:(err?err.message:m)+' (line '+ln+')'},'*');return false;};
-window.addEventListener('unhandledrejection',function(ev){window.parent.postMessage({type:'error',message:'Promise: '+ev.reason},'*');});
+window.onerror=function(m,_,ln,_c,err){_post('error',(err?err.message:m)+' (line '+ln+')');return false;};
+window.addEventListener('unhandledrejection',function(ev){_post('error','Promise: '+ev.reason);});
 })()<\/script>`;
 
         if (lang === "html") {
@@ -1568,7 +1579,7 @@ window.addEventListener('unhandledrejection',function(ev){window.parent.postMess
             return `<!DOCTYPE html><html><head><meta charset="UTF-8"/>
 <style>body{margin:0;padding:12px;background:#1e1e1e;color:#cccccc;font-family:'Consolas',monospace;font-size:13px}</style>
 </head><body>${intercept}
-<script>try{${c}}catch(err){window.parent.postMessage({type:'error',message:err.message},'*');}<\/script>
+<script>try{${c}}catch(err){_post('error',err.message);}<\/script>
 </body></html>`;
         }
         return "";
@@ -1692,8 +1703,11 @@ window.addEventListener('unhandledrejection',function(ev){window.parent.postMess
 
         if (isClientSide) {
             setIsRunning(true);
-            setSrcDoc(buildSrcDoc(code, language));
-            setRunKey((p) => p + 1);
+            const nextRunKey = activeRunKeyRef.current + 1;
+            activeRunKeyRef.current = nextRunKey;
+            seenIframeMessagesRef.current.clear();
+            setSrcDoc(buildSrcDoc(code, language, nextRunKey));
+            setRunKey(nextRunKey);
             setTerminalLines([{ type: "divider", text: `─── ${language.toUpperCase()} rendered ───────────────────────────────────────` }]);
             setTimeout(() => setIsRunning(false), 500);
             return;
@@ -1774,6 +1788,31 @@ window.addEventListener('unhandledrejection',function(ev){window.parent.postMess
                         onClick={() => router.push("/")}
                     >
                         Home</button>
+                    <label className="sr-only" htmlFor="problem-solver-language">
+                        Programming language
+                    </label>
+                    <select
+                        id="problem-solver-language"
+                        aria-label="Programming language"
+                        value={language}
+                        onChange={(event) => handleLanguageChange(event.target.value)}
+                        className="h-9 max-w-[150px] rounded-lg border px-3 text-sm font-medium cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
+                        style={{
+                            color: "var(--workbench-text)",
+                            backgroundColor: "var(--workbench-editor)",
+                            borderColor: "var(--workbench-border)",
+                            colorScheme: isDark ? "dark" : "light",
+                        }}
+                    >
+                        <option value="html">HTML</option>
+                        <option value="css">CSS</option>
+                        <option value="javascript">JavaScript</option>
+                        <option value="python">Python</option>
+                        <option value="node">Node.js</option>
+                        <option value="java">Java</option>
+                        <option value="react">React</option>
+                        <option value="next">Next.js</option>
+                    </select>
                     <button
                         onClick={handleRun}
                         disabled={isRunning || waitingForInput}
@@ -1996,7 +2035,49 @@ window.addEventListener('unhandledrejection',function(ev){window.parent.postMess
                                             </SandpackProvider>
                                         ) : isClientSide ? (
                                             <div className="flex flex-col h-full">
-                                                {srcDoc ? (
+                                                {language === "javascript" ? (
+                                                    <>
+                                                        {srcDoc && (
+                                                            <iframe
+                                                                key={runKey}
+                                                                srcDoc={srcDoc}
+                                                                sandbox="allow-scripts allow-same-origin allow-modals allow-forms"
+                                                                className="hidden"
+                                                                title="JavaScript execution"
+                                                            />
+                                                        )}
+                                                        <div
+                                                            className="flex-1 overflow-auto p-3 space-y-1"
+                                                            style={{
+                                                                backgroundColor: "var(--workbench-editor)",
+                                                                color: "var(--workbench-text)",
+                                                                fontFamily: "monospace",
+                                                                fontSize: "13px",
+                                                            }}
+                                                        >
+                                                            {terminalLines.length === 0 ? (
+                                                                <span style={{ color: "var(--workbench-muted)", fontStyle: "italic" }}>
+                                                                    Click ▶ Run to execute…
+                                                                </span>
+                                                            ) : terminalLines.map((line, index) => (
+                                                                <div
+                                                                    key={index}
+                                                                    style={{
+                                                                        color: line.type === "error"
+                                                                            ? (isDark ? "#f87171" : "#b91c1c")
+                                                                            : line.type === "divider"
+                                                                                ? "var(--workbench-muted)"
+                                                                                : "var(--workbench-text)",
+                                                                        whiteSpace: "pre-wrap",
+                                                                        overflowWrap: "anywhere",
+                                                                    }}
+                                                                >
+                                                                    {line.text}
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                    </>
+                                                ) : srcDoc ? (
                                                     <iframe
                                                         key={runKey}
                                                         srcDoc={srcDoc}
@@ -2012,13 +2093,13 @@ window.addEventListener('unhandledrejection',function(ev){window.parent.postMess
                                                         </span>
                                                     </div>
                                                 )}
-                                                {terminalLines.length > 0 && (
+                                                {language !== "javascript" && terminalLines.length > 0 && (
                                                     <div
                                                         className="overflow-auto p-2 space-y-[1px]"
                                                         style={{ maxHeight: "80px", borderTop: "1px solid var(--workbench-border)", backgroundColor: "var(--workbench-editor)", fontFamily: "monospace", fontSize: "12px" }}
                                                     >
                                                         {terminalLines.map((l, i) => (
-                                                            <div key={i} style={{ color: l.type === "error" ? "#f14c4c" : "#9cdcfe", whiteSpace: "pre-wrap" }}>
+                                                            <div key={i} style={{ color: l.type === "error" ? (isDark ? "#f87171" : "#b91c1c") : "var(--workbench-text)", whiteSpace: "pre-wrap" }}>
                                                                 {l.text}
                                                             </div>
                                                         ))}
@@ -2047,10 +2128,11 @@ window.addEventListener('unhandledrejection',function(ev){window.parent.postMess
                                                     key={i}
                                                     style={{
                                                         color:
-                                                            l.type === "error" ? "#f14c4c" :
-                                                                l.type === "input-echo" ? "#4ec9b0" :
-                                                                    l.type === "divider" ? "#3c3c3c" : "#cccccc",
+                                                            l.type === "error" ? (isDark ? "#f87171" : "#b91c1c") :
+                                                                l.type === "input-echo" ? (isDark ? "#4ec9b0" : "#047857") :
+                                                                    l.type === "divider" ? "var(--workbench-muted)" : "var(--workbench-text)",
                                                         whiteSpace: "pre-wrap",
+                                                        overflowWrap: "anywhere",
                                                     }}
                                                 >
                                                     {l.type === "input-echo" ? `${l.prompt}${l.answer}` : l.text}
