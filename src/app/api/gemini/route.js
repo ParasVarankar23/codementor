@@ -159,6 +159,7 @@ Return ONLY the JSON. No other text.
         return NextResponse.json({
           displayMessage: "✅ **Your code looks great!** No fixes needed. Keep up the good work! 🎉",
           explanation: "Your code looks great! No fixes needed. Keep up the good work!",
+          steps: [],
           errors: [],
           highlightedLines: []
         });
@@ -178,17 +179,18 @@ ${fixedCode}
 \`\`\`
 
 TASK:
-1. Find what was wrong and how it was fixed
-2. Explain in a friendly, human-like way
-3. Mention specific line numbers
-4. Be encouraging and helpful
+1. Explain only the differences between the original and fixed code. Do not explain unchanged code or give a general code walkthrough.
+2. Return one concise step for each distinct change, explaining what was wrong and what changed.
+3. Use line numbers from the FIXED CODE for lineStart, lineEnd, errors.line, and highlightedLines.
+4. Keep each step beginner-friendly and suitable for speech.
 
 Return a JSON with:
 {
-  "displayMessage": "Friendly message with **markdown** and emojis",
-  "explanation": "Natural explanation mentioning line numbers (for speech)",
+  "displayMessage": "Short friendly summary of the fixes only",
+  "explanation": "Short spoken intro about the fixes only",
+  "steps": [{"text": "What changed and why", "lineStart": number, "lineEnd": number}],
   "errors": [{"line": number, "message": "what was wrong", "fix": "how it was fixed"}],
-  "highlightedLines": [array of line numbers that were fixed]
+  "highlightedLines": [array of fixed-code line numbers that were changed]
 }
 
 Examples:
@@ -197,6 +199,7 @@ For a single fix:
 {
   "displayMessage": "**I found and fixed the issue!** 🛠️\n\nOn **line 8**, the h1 tag wasn't closed properly. I added the missing '>'.\n\nYour code should work perfectly now!",
   "explanation": "I found and fixed the issue. On line 8, the h1 tag wasn't closed properly. I added the missing greater than symbol. Your code should work perfectly now!",
+  "steps": [{"text": "Step 1: The h1 tag on line 8 was missing its closing bracket. I added the missing bracket on line 8.", "lineStart": 8, "lineEnd": 8}],
   "errors": [{"line": 8, "message": "unclosed h1 tag", "fix": "added '>'}],
   "highlightedLines": [8]
 }
@@ -205,6 +208,10 @@ For multiple fixes:
 {
   "displayMessage": "I found and fixed a couple of issues in your code! 🛠️\n\n- On **line 8**, the h1 tag wasn't closed properly\n- On **line 12**, there was a typo in 'console.log'\n\nYour code should work perfectly now!",
   "explanation": "I found and fixed two issues. On line 8, the h1 tag wasn't closed properly - I added the missing greater-than symbol. On line 12, there was a typo in console.log - I corrected it. Your code should work perfectly now!",
+  "steps": [
+    {"text": "Step 1: The h1 tag on line 8 was missing its closing bracket. I added the missing bracket on line 8.", "lineStart": 8, "lineEnd": 8},
+    {"text": "Step 2: The console.log call on line 12 had a typo. I corrected the function name on line 12.", "lineStart": 12, "lineEnd": 12}
+  ],
   "errors": [
     {"line": 8, "message": "unclosed h1 tag", "fix": "added '>'},
     {"line": 12, "message": "typo in console.log", "fix": "corrected to console.log"}
@@ -212,6 +219,8 @@ For multiple fixes:
   "highlightedLines": [8, 12]
 }
 
+The examples illustrate concise fix-only wording. Always include the required "steps" field in your response, with one entry per change and fixed-code line numbers.
+If no differences are found, return an empty steps array.
 Return ONLY the JSON. No other text.
 `;
 
@@ -254,13 +263,34 @@ Return ONLY the JSON. No other text.
           }
 
           const parsed = JSON.parse(jsonMatch[0]);
+          const parsedErrors = Array.isArray(parsed.errors) ? parsed.errors : [];
+          const parsedSteps = Array.isArray(parsed.steps)
+            ? parsed.steps.filter((step) => step && typeof step.text === "string")
+            : [];
+          const steps = parsedSteps.length > 0
+            ? parsedSteps.map((step) => ({
+              text: step.text,
+              lineStart: Number.isFinite(Number(step.lineStart)) ? Number(step.lineStart) : 1,
+              lineEnd: Number.isFinite(Number(step.lineEnd))
+                ? Number(step.lineEnd)
+                : Number(step.lineStart) || 1
+            }))
+            : parsedErrors.map((error) => {
+              const line = Number(error.line) || 1;
+              return {
+                text: `On line ${line}, ${error.message || "an issue was found"}. ${error.fix || "The code was corrected."}`,
+                lineStart: line,
+                lineEnd: line
+              };
+            });
 
           // Validate required fields
           const response_data = {
             displayMessage: parsed.displayMessage || "I fixed your code!",
             explanation: parsed.explanation || "",
-            errors: parsed.errors || [],
-            highlightedLines: parsed.highlightedLines || []
+            steps,
+            errors: parsedErrors,
+            highlightedLines: Array.isArray(parsed.highlightedLines) ? parsed.highlightedLines : []
           };
 
           console.log("✅ Successfully parsed fix explanation:", {
@@ -277,8 +307,9 @@ Return ONLY the JSON. No other text.
 
           // Fallback fix explanation
           return NextResponse.json({
-            displayMessage: "✅ **Code fixed!** Check the editor to see the changes.",
-            explanation: "I fixed your code. Check the editor to see the changes.",
+            displayMessage: "I couldn't generate step-by-step details for the code changes.",
+            explanation: "",
+            steps: [],
             errors: [],
             highlightedLines: []
           });
@@ -288,8 +319,9 @@ Return ONLY the JSON. No other text.
 
         // Fallback fix explanation
         return NextResponse.json({
-          displayMessage: "✅ **Code fixed!** Check the editor to see the changes.",
-          explanation: "I fixed your code. Check the editor to see the changes.",
+          displayMessage: "I couldn't generate step-by-step details for the code changes.",
+          explanation: "",
+          steps: [],
           errors: [],
           highlightedLines: []
         });

@@ -37,6 +37,7 @@ import {
   FaSun,
   FaTerminal,
   FaUser,
+  FaVolumeMute,
   FaVolumeUp,
 } from "react-icons/fa";
 import ReactMarkdown from 'react-markdown';
@@ -470,6 +471,7 @@ public class Main {
   const [aiMessages, setAiMessages] = useState([]);
   const [userInput, setUserInput] = useState("");
   const [isAiSpeaking, setIsAiSpeaking] = useState(false);
+  const [isSpeechMuted, setIsSpeechMuted] = useState(false);
   const [isAiTyping, setIsAiTyping] = useState(false);
   const [speechSynth, setSpeechSynth] = useState(null);
   const [availableVoices, setAvailableVoices] = useState([]);
@@ -727,7 +729,23 @@ public class Main {
     }
   }, [aiMessages, currentExplanationStep, isExplanationPaused, explanationSteps, practiceData]);
 
-  const stopSpeaking = () => { speechSynth?.cancel(); setIsAiSpeaking(false); };
+  const stopSpeaking = () => {
+    speechSynth?.cancel();
+    setIsAiSpeaking(false);
+  };
+
+  const toggleSpeechMute = () => {
+    const nextMuted = !isSpeechMuted;
+    setIsSpeechMuted(nextMuted);
+    const synth = speechSynth || window.speechSynthesis;
+    if (synth) {
+      if (nextMuted) {
+        synth.pause();
+      } else {
+        synth.resume();
+      }
+    }
+  };
 
   const toggleListening = () => {
     if (!recognition) {
@@ -958,7 +976,6 @@ public class Main {
       // Natural speaking rate and pitch
       utterance.rate = 0.9; // Slightly slower for clarity
       utterance.pitch = 1.1; // Slightly higher for friendly tone
-      utterance.volume = 1;
 
       if (selectedVoice) {
         utterance.voice = selectedVoice;
@@ -989,6 +1006,7 @@ public class Main {
         speakNextChunk(index + 1);
       };
 
+      if (isSpeechMuted) speechSynth.pause();
       speechSynth.speak(utterance);
     };
 
@@ -1244,7 +1262,6 @@ public class Main {
               // Natural speaking settings
               utterance.rate = 0.9;      // Slightly slower for clarity
               utterance.pitch = 1.1;      // Slightly higher for friendly tone
-              utterance.volume = 1;
 
               if (selectedVoice) {
                 utterance.voice = selectedVoice;
@@ -1276,6 +1293,7 @@ public class Main {
                 speakNextSentence();
               };
 
+              if (isSpeechMuted) speechSynth.pause();
               speechSynth.speak(utterance);
             };
 
@@ -1420,10 +1438,15 @@ public class Main {
         isFixExplanation: true
       });
 
-      const explanation = geminiResponse.data.displayMessage || geminiResponse.data.display || "";
+      const fixSteps = Array.isArray(geminiResponse.data.steps)
+        ? geminiResponse.data.steps
+        : [];
+      const explanation = fixSteps.length > 0
+        ? fixSteps.map((step, index) => `**Step ${index + 1}:** ${step.text}`).join("\n\n")
+        : geminiResponse.data.displayMessage || "I couldn't identify specific code changes.";
       const aiMessage = openRouterSuccess && fixedCode !== codeToFix
-        ? `🎯 **I fixed your ${language} code!**\n\nHere's the corrected version:\n\n\`\`\`${language}\n${fixedCode}\n\`\`\`\n\n${explanation}`
-        : explanation || "I've analyzed your code.";
+        ? `🎯 **I fixed your ${language} code!**\n\nHere's the corrected version:\n\n\`\`\`${language}\n${fixedCode}\n\`\`\`\n\n**Changes made:**\n\n${explanation}`
+        : explanation;
 
       // Add AI response to local state
       setAiMessages(prev => [...prev, {
@@ -1433,12 +1456,12 @@ public class Main {
         timestamp: new Date().toLocaleTimeString(),
         fixedCode: fixedCode !== codeToFix ? fixedCode : undefined,
         originalCode: codeToFix,
-        showFixButtons: fixedCode !== codeToFix
+        showFixButtons: fixedCode !== codeToFix,
+        fixSteps
       }]);
 
-      // Speak the explanation
-      if (geminiResponse.data.speech) {
-        speakText(geminiResponse.data.speech);
+      if (fixSteps.length > 0) {
+        speakText(fixSteps.map(({ text }) => text).join(" "));
       }
 
       return {
@@ -1502,13 +1525,17 @@ public class Main {
         body: JSON.stringify({
           originalCode,
           fixedCode,
-          language: detectedLang || language
+          language: detectedLang || language,
+          isFixExplanation: true
         })
       });
 
+      if (!response.ok) {
+        throw new Error(`Failed to explain code changes (${response.status})`);
+      }
+
       const data = await response.json();
-      const displayMessage = data.display || "I've updated your code!";
-      const speechMessage = data.speech || "";
+      const displayMessage = data.displayMessage || "I've updated your code!";
       const errors = data.errors || [];
 
       // Highlight errors in editor
@@ -1522,30 +1549,101 @@ public class Main {
         }
       }
 
-      // Add message to chat
+      const steps = Array.isArray(data.steps) ? data.steps : [];
       setAiMessages(prev => [...prev, {
         id: `apply-explain-${Date.now()}-${Math.random()}`,
         type: "ai",
-        message: displayMessage,
+        message: steps.length > 0
+          ? `✅ **Applied the fixes. Here are the changes:**\n\n${displayMessage}`
+          : "✅ **Applied the fixes.** No specific changed lines were returned to explain.",
         timestamp: new Date().toLocaleTimeString()
       }]);
 
-      // Speak the explanation
-      if (speechMessage) {
-        speakText(speechMessage);
+      if (steps.length === 0) {
+        return;
       }
 
+      setExplanationSteps(steps);
+      setCurrentExplanationStep(0);
+      setIsAiTyping(false);
+
+      const speakStep = (text) => new Promise((resolve) => {
+        if (!speechSynth || !text) {
+          resolve();
+          return;
+        }
+
+        const utterance = new SpeechSynthesisUtterance(cleanTextForSpeech(text));
+        utterance.rate = 0.9;
+        utterance.pitch = 1.1;
+
+        if (selectedVoice) {
+            utterance.voice = selectedVoice;
+            utterance.lang = selectedVoice.lang;
+        }
+
+        utterance.onstart = () => setIsAiSpeaking(true);
+        utterance.onend = () => {
+          setIsAiSpeaking(false);
+          resolve();
+        };
+        utterance.onerror = (speechError) => {
+          console.error("Step-by-step speech error:", speechError);
+          setIsAiSpeaking(false);
+          resolve();
+        };
+
+        if (isSpeechMuted) speechSynth.pause();
+        speechSynth.speak(utterance);
+      });
+
+      const lineCount = fixedCode.split("\n").length;
+      for (let index = 0; index < steps.length; index++) {
+        const step = steps[index];
+        const lineStart = Math.max(1, Math.min(Number(step.lineStart) || 1, lineCount));
+        const lineEnd = Math.max(lineStart, Math.min(Number(step.lineEnd) || lineStart, lineCount));
+        const linesToHighlight = Array.from(
+          { length: lineEnd - lineStart + 1 },
+          (_, lineIndex) => lineStart + lineIndex
+        );
+
+        setCurrentExplanationStep(index);
+        if (window.monacoEditor && window.monacoEditor.highlightLines) {
+          window.monacoEditor.highlightLines(linesToHighlight);
+        }
+
+        const stepText = step.text || `Explanation for line ${lineStart}.`;
+        setAiMessages(prev => [...prev, {
+          id: `apply-explain-step-${Date.now()}-${index}`,
+          type: "ai",
+          message: `**Step ${index + 1}/${steps.length}:** ${stepText}`,
+          timestamp: new Date().toLocaleTimeString()
+        }]);
+        await speakStep(stepText);
+      }
+
+      if (window.monacoEditor && window.monacoEditor.clearHighlights) {
+        window.monacoEditor.clearHighlights();
+      }
+      setIsAiSpeaking(false);
+      setAiMessages(prev => [...prev, {
+        id: `apply-explain-complete-${Date.now()}`,
+        type: "ai",
+        message: "✅ **Step-by-step explanation complete!**",
+        timestamp: new Date().toLocaleTimeString()
+      }]);
     } catch (error) {
       console.error("Apply & Explain error:", error);
 
-      // Simple success message even if explanation fails
+      const explanationError = error instanceof Error ? error.message : "Please try again.";
       setAiMessages(prev => [...prev, {
-        id: `apply-success-${Date.now()}-${Math.random()}`,
+        id: `apply-explain-error-${Date.now()}-${Math.random()}`,
         type: "ai",
-        message: "✅ **Code applied!** Check the editor to see the changes.",
+        message: `✅ **Code applied.** I couldn't complete the explanation: ${explanationError}`,
         timestamp: new Date().toLocaleTimeString()
       }]);
-      speakText("I applied the fixes to your code.");
+      setIsAiSpeaking(false);
+      speakText(`The code was applied, but I couldn't complete the explanation. ${explanationError}`);
     } finally {
       setIsExplaining(false);
       setIsAiTyping(false);
@@ -2634,6 +2732,16 @@ window.addEventListener('unhandledrejection',function(ev){window.parent.postMess
                         </>
                       )}
                     </div>
+                    <button
+                      type="button"
+                      onClick={toggleSpeechMute}
+                      aria-label={isSpeechMuted ? "Unmute speech" : "Mute speech"}
+                      aria-pressed={isSpeechMuted}
+                      title={isSpeechMuted ? "Unmute speech" : "Mute speech"}
+                      className="text-gray-400 hover:text-indigo-400"
+                    >
+                      {isSpeechMuted ? <FaVolumeMute size={12} /> : <FaVolumeUp size={12} />}
+                    </button>
                     {isAiSpeaking && (
                       <button onClick={stopSpeaking} className="text-gray-400 hover:text-indigo-400" aria-label="Stop speech">
                         <FaStop size={10} />

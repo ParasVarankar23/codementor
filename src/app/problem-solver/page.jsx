@@ -34,6 +34,7 @@ import {
     FaSun,
     FaTerminal,
     FaUser,
+    FaVolumeMute,
     FaVolumeUp,
 } from "react-icons/fa";
 import ReactMarkdown from 'react-markdown';
@@ -369,6 +370,7 @@ export default function Home() {
 
     // Speech control states
     const [isSpeaking, setIsSpeaking] = useState(false);
+    const [isSpeechMuted, setIsSpeechMuted] = useState(false);
     const [speechUtterance, setSpeechUtterance] = useState(null);
 
     /* ── default snippets ── */
@@ -993,7 +995,6 @@ public class Main {
                     // Natural speaking settings
                     utterance.rate = 0.85;
                     utterance.pitch = 1.0; // Let the voice maintain its natural pitch
-                    utterance.volume = 1;
 
                     utterance.onstart = () => {
                         console.log(`▶️ Speaking sentence ${currentSentenceIndex + 1}/${sentences.length}`);
@@ -1022,6 +1023,7 @@ public class Main {
                     };
 
                     setSpeechUtterance(utterance);
+                    if (isSpeechMuted) speechSynth.pause();
                     speechSynth.speak(utterance);
 
                 } catch (e) {
@@ -1080,6 +1082,19 @@ public class Main {
             window.monacoEditor.clearTemporaryHighlights();
         }
 
+    };
+
+    const toggleSpeechMute = () => {
+        const nextMuted = !isSpeechMuted;
+        setIsSpeechMuted(nextMuted);
+        const synth = speechSynth || window.speechSynthesis;
+        if (synth) {
+            if (nextMuted) {
+                synth.pause();
+            } else {
+                synth.resume();
+            }
+        }
     };
 
     // Keep the old function for backward compatibility
@@ -2332,6 +2347,7 @@ window.addEventListener('unhandledrejection',function(ev){_post('error','Promise
                                                                                 testUtterance.rate = 0.85;
                                                                                 if (speechSynth) {
                                                                                     speechSynth.cancel();
+                                                                                    if (isSpeechMuted) speechSynth.pause();
                                                                                     speechSynth.speak(testUtterance);
                                                                                 }
                                                                             }}
@@ -2620,11 +2636,22 @@ window.addEventListener('unhandledrejection',function(ev){_post('error','Promise
                                         </>
                                     )}
 
+                                    <button
+                                        type="button"
+                                        onClick={toggleSpeechMute}
+                                        aria-label={isSpeechMuted ? "Unmute speech" : "Mute speech"}
+                                        aria-pressed={isSpeechMuted}
+                                        title={isSpeechMuted ? "Unmute speech" : "Mute speech"}
+                                        className={`${isSpeaking ? "" : "ml-auto "}rounded p-1 text-gray-500 hover:text-[#FF5A1F] transition-colors`}
+                                    >
+                                        {isSpeechMuted ? <FaVolumeMute size={12} /> : <FaVolumeUp size={12} />}
+                                    </button>
+
                                     {/* Stop button - shown when speaking */}
                                     {isSpeaking && (
                                         <button
                                             onClick={handleStopSpeaking}
-                                            className="ml-auto bg-red-500/20 hover:bg-red-500/30 text-red-500 px-2 py-0.5 rounded text-[9px] font-medium flex items-center gap-1 transition-all"
+                                            className="bg-red-500/20 hover:bg-red-500/30 text-red-500 px-2 py-0.5 rounded text-[9px] font-medium flex items-center gap-1 transition-all"
                                         >
                                             <FaStop size={8} />
                                             Stop
@@ -2633,7 +2660,7 @@ window.addEventListener('unhandledrejection',function(ev){_post('error','Promise
 
                                     {/* Original stop button for isAiSpeaking (keep for backward compatibility) */}
                                     {!isSpeaking && isAiSpeaking && (
-                                        <button onClick={stopSpeaking} className="ml-auto text-gray-500 hover:text-[#FF5A1F]">
+                                        <button onClick={stopSpeaking} className="text-gray-500 hover:text-[#FF5A1F]">
                                             <FaStop size={10} />
                                         </button>
                                     )}
