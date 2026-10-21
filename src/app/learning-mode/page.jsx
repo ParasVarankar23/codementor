@@ -91,6 +91,108 @@ function extractPrompts(src, lang) {
   return prompts;
 }
 
+function createCodeChangeSteps(originalCode, fixedCode) {
+  const originalLines = originalCode.split("\n");
+  const fixedLines = fixedCode.split("\n");
+  const columns = fixedLines.length + 1;
+  const cellCount = (originalLines.length + 1) * columns;
+  const edits = [];
+
+  if (cellCount <= 1_000_000) {
+    const lcs = new Uint32Array(cellCount);
+
+    for (let originalIndex = originalLines.length - 1; originalIndex >= 0; originalIndex--) {
+      for (let fixedIndex = fixedLines.length - 1; fixedIndex >= 0; fixedIndex--) {
+        const cell = originalIndex * columns + fixedIndex;
+        lcs[cell] = originalLines[originalIndex] === fixedLines[fixedIndex]
+          ? lcs[(originalIndex + 1) * columns + fixedIndex + 1] + 1
+          : Math.max(
+            lcs[(originalIndex + 1) * columns + fixedIndex],
+            lcs[originalIndex * columns + fixedIndex + 1]
+          );
+      }
+    }
+
+    let originalIndex = 0;
+    let fixedIndex = 0;
+    while (originalIndex < originalLines.length || fixedIndex < fixedLines.length) {
+      if (
+        originalIndex < originalLines.length &&
+        fixedIndex < fixedLines.length &&
+        originalLines[originalIndex] === fixedLines[fixedIndex]
+      ) {
+        edits.push({ type: "same" });
+        originalIndex++;
+        fixedIndex++;
+      } else if (
+        originalIndex < originalLines.length &&
+        (
+          fixedIndex >= fixedLines.length ||
+          lcs[(originalIndex + 1) * columns + fixedIndex] >= lcs[originalIndex * columns + fixedIndex + 1]
+        )
+      ) {
+        edits.push({ type: "removed", line: originalIndex + 1, text: originalLines[originalIndex] });
+        originalIndex++;
+      } else {
+        edits.push({ type: "added", line: fixedIndex + 1, text: fixedLines[fixedIndex] });
+        fixedIndex++;
+      }
+    }
+  } else {
+    const lineCount = Math.max(originalLines.length, fixedLines.length);
+    for (let index = 0; index < lineCount; index++) {
+      if (originalLines[index] === fixedLines[index]) {
+        edits.push({ type: "same" });
+      } else {
+        if (originalLines[index] !== undefined) {
+          edits.push({ type: "removed", line: index + 1, text: originalLines[index] });
+        }
+        if (fixedLines[index] !== undefined) {
+          edits.push({ type: "added", line: index + 1, text: fixedLines[index] });
+        }
+      }
+    }
+  }
+
+  const changes = [];
+  let change = [];
+  const addChange = () => {
+    if (change.length === 0) return;
+    const removedLines = change.filter(({ type }) => type === "removed");
+    const addedLines = change.filter(({ type }) => type === "added");
+    const lineStart = addedLines[0]?.line ?? removedLines[0]?.line ?? 1;
+    const lineEnd = addedLines[addedLines.length - 1]?.line ?? lineStart;
+    const before = removedLines.map(({ text }) => text.trim()).filter(Boolean).join(" ");
+    const after = addedLines.map(({ text }) => text.trim()).filter(Boolean).join(" ");
+    const beforeText = before ? `\`${before.slice(0, 120)}\`` : "";
+    const afterText = after ? `\`${after.slice(0, 120)}\`` : "";
+    const lineLabel = (start, end) => start === end ? `line ${start}` : `lines ${start}-${end}`;
+    let text;
+
+    if (removedLines.length > 0 && addedLines.length > 0) {
+      text = `Replaced ${beforeText} on the original ${lineLabel(removedLines[0].line, removedLines[removedLines.length - 1].line)} with ${afterText} on the corrected ${lineLabel(lineStart, lineEnd)}.`;
+    } else if (removedLines.length > 0) {
+      text = `Removed ${beforeText} from the original ${lineLabel(removedLines[0].line, removedLines[removedLines.length - 1].line)}. This line is no longer present in the corrected code.`;
+    } else {
+      text = `Added ${afterText} on the corrected ${lineLabel(lineStart, lineEnd)}.`;
+    }
+
+    changes.push({ text, lineStart, lineEnd });
+    change = [];
+  };
+
+  for (const edit of edits) {
+    if (edit.type === "same") {
+      addChange();
+    } else {
+      change.push(edit);
+    }
+  }
+  addChange();
+
+  return changes;
+}
+
 /* ═══════════════════════════════════════════════════════════════════════════
    VS CODE–STYLE TERMINAL
 ═══════════════════════════════════════════════════════════════════════════ */
@@ -1002,7 +1104,14 @@ public class Main {
       utterance.onstart = () => setIsAiSpeaking(true);
       utterance.onend = () => speakNextChunk(index + 1);
       utterance.onerror = (event) => {
-        console.error('Speech error:', event);
+        const errorCode = event?.error;
+        if (errorCode === "canceled" || errorCode === "interrupted") {
+          setIsAiSpeaking(false);
+          return;
+        }
+        console.warn(
+          `Speech synthesis could not play a sentence${errorCode ? ` (${errorCode})` : ""}.`
+        );
         speakNextChunk(index + 1);
       };
 
@@ -1242,11 +1351,20 @@ public class Main {
             const sentences = cleanText.match(/[^.!?]+[.!?]+/g) || [cleanText];
 
             let sentenceIndex = 0;
+            let speechFinished = false;
+
+            const finishSpeech = () => {
+              if (speechFinished) return;
+              speechFinished = true;
+              setIsAiSpeaking(false);
+              resolve();
+            };
 
             const speakNextSentence = () => {
+              if (speechFinished) return;
+
               if (sentenceIndex >= sentences.length) {
-                setIsAiSpeaking(false);
-                setTimeout(resolve, 800);
+                setTimeout(finishSpeech, 800);
                 return;
               }
 
@@ -1288,7 +1406,19 @@ public class Main {
                 speakNextSentence();
               };
               utterance.onerror = (event) => {
-                console.error('Speech error:', event);
+                const errorCode = event?.error;
+                if (
+                  errorCode === "canceled" ||
+                  errorCode === "interrupted" ||
+                  explanationPausedRef.current
+                ) {
+                  finishSpeech();
+                  return;
+                }
+
+                console.warn(
+                  `Speech synthesis could not play explanation sentence ${sentenceIndex + 1}${errorCode ? ` (${errorCode})` : ""}; continuing with the next sentence.`
+                );
                 sentenceIndex++;
                 speakNextSentence();
               };
@@ -1549,13 +1679,16 @@ public class Main {
         }
       }
 
-      const steps = Array.isArray(data.steps) ? data.steps : [];
+      const apiSteps = Array.isArray(data.steps) ? data.steps : [];
+      const steps = apiSteps.length > 0
+        ? apiSteps
+        : createCodeChangeSteps(originalCode, fixedCode);
       setAiMessages(prev => [...prev, {
         id: `apply-explain-${Date.now()}-${Math.random()}`,
         type: "ai",
         message: steps.length > 0
-          ? `✅ **Applied the fixes. Here are the changes:**\n\n${displayMessage}`
-          : "✅ **Applied the fixes.** No specific changed lines were returned to explain.",
+          ? `✅ **Applied the fixes. Here are the specific changed lines:**\n\n${displayMessage}`
+          : "✅ **Applied the fixes.** The before-and-after code has no line differences to explain.",
         timestamp: new Date().toLocaleTimeString()
       }]);
 
@@ -1567,13 +1700,14 @@ public class Main {
       setCurrentExplanationStep(0);
       setIsAiTyping(false);
 
+      const getStepText = (text) => text.replace(/^Step\s+\d+(?:\s*\/\s*\d+)?\s*:\s*/i, "").trim();
       const speakStep = (text) => new Promise((resolve) => {
         if (!speechSynth || !text) {
           resolve();
           return;
         }
 
-        const utterance = new SpeechSynthesisUtterance(cleanTextForSpeech(text));
+        const utterance = new SpeechSynthesisUtterance(cleanTextForSpeech(getStepText(text)));
         utterance.rate = 0.9;
         utterance.pitch = 1.1;
 
@@ -1588,7 +1722,12 @@ public class Main {
           resolve();
         };
         utterance.onerror = (speechError) => {
-          console.error("Step-by-step speech error:", speechError);
+          const errorCode = speechError?.error;
+          if (errorCode !== "canceled" && errorCode !== "interrupted") {
+            console.warn(
+              `Speech synthesis could not play a fix explanation step${errorCode ? ` (${errorCode})` : ""}.`
+            );
+          }
           setIsAiSpeaking(false);
           resolve();
         };
@@ -1612,7 +1751,7 @@ public class Main {
           window.monacoEditor.highlightLines(linesToHighlight);
         }
 
-        const stepText = step.text || `Explanation for line ${lineStart}.`;
+        const stepText = getStepText(step.text || `Explanation for line ${lineStart}.`);
         setAiMessages(prev => [...prev, {
           id: `apply-explain-step-${Date.now()}-${index}`,
           type: "ai",
